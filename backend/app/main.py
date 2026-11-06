@@ -94,3 +94,5 @@ async def graph(entity: str = "Q7251"):
 
 from .challenges import router as challenge_router
 app.include_router(challenge_router)
+from .stories import router as story_router
+app.include_router(story_router)

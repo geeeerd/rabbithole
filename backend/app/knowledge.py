@@ -35,7 +35,7 @@ def validate(qid):
         raise HTTPException(422, "Use a valid Wikidata entity ID.")
 
 def normalize(e):
-    return Entity(id=e["id"], label=e.get("labels", {}).get("en", {}).get("value", e["id"]), description=e.get("descriptions", {}).get("en", {}).get("value", "No English description available."), source_url=f"https://www.wikidata.org/wiki/{e['id']}")
+    return Entity(id=e["id"], label=(e.get("labels", {}).get("en") or e.get("labels", {}).get("mul") or {}).get("value", e["id"]), description=e.get("descriptions", {}).get("en", {}).get("value", "No English description available."), source_url=f"https://www.wikidata.org/wiki/{e['id']}")
 
 def extract(e):
     edges = []

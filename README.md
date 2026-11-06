@@ -35,6 +35,7 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 - Statement inspection including references, qualifiers and original source links.
 - Shareable exploration URLs preserving the root, up to eight expanded branches, selected topic and relationship filter.
 - Light/dark themes.
+- Discovery Stories at `/stories`: three guided journeys with validated statement sequences, chapter links, public-domain portraits, attribution and links into exploration.
 - Connection Challenge at `/challenge`: daily starter puzzle, custom practice pairs, server-validated moves, hints, undo, signed progress recovery, source links and shareable results.
 - Timeouts, bounded upstream concurrency, retries and a bounded one-hour in-memory cache.
 - A real Wikidata snapshot around Alan Turing for offline exploration; fallback is visibly labeled.
@@ -56,7 +57,7 @@ CI runs the same checks. Both package managers have committed lockfiles.
 
 ## Scope and limitations
 
-This is the first vertical slice, not the full public beta. Additional reviewed challenges, stories, Wikipedia summaries, Commons media, persistent storage, production rate limiting, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live API is an outbound neighborhood only, capped at 12 statements; the frontend caps the graph at 60 nodes and eight expanded branches. Search and fallback support English. The offline collection covers a small Turing neighborhood and may not support further expansions.
+This is the first vertical slice, not the full public beta. Additional reviewed challenges and stories, Wikipedia summaries, persistent storage, production rate limiting, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live API is an outbound neighborhood only, capped at 12 statements; the frontend caps the graph at 60 nodes and eight expanded branches. Search and fallback support English. The offline collection covers a small Turing neighborhood and may not support further expansions.
 
 The starter daily challenge repeats the same reviewed two-step route; practice pairs are limited to the bundled graph, not arbitrary Wikidata topics. Challenges use only directed “educated at” and “part of” statements. Signed progress expires after 24 hours. Set `CHALLENGE_SIGNING_KEY` in the backend environment for progress to survive server restarts; without it, a temporary process key is used. There is no leaderboard or claim of a globally shortest route.
 
@@ -64,6 +65,6 @@ The backend is for local development. Before public deployment, configure an ide
 
 ## Data and license
 
-Code: MIT. Structured entity snapshots: Wikidata CC0, not independently verified research. Statements without references are explicitly labeled. No Wikipedia article text or Commons media is redistributed. See [data sources](docs/data-sources.md).
+Code: MIT. Structured entity snapshots: Wikidata CC0, not independently verified research. Statements without references are explicitly labeled. No Wikipedia article text is redistributed. Three public-domain Commons portraits are bundled with file-specific attribution in `frontend/public/images/ATTRIBUTION.md`. See [data sources](docs/data-sources.md).
 
 See [the original blueprint](docs/blueprint.md), [architecture](docs/architecture.md), [roadmap](docs/roadmap.md) and [contribution guide](CONTRIBUTING.md).

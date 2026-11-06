@@ -1,0 +1,134 @@
+[
+  {
+    "id": "turing-to-cambridge",
+    "title": "A mind. A college. A world of ideas.",
+    "description": "Trace Alan Turing’s educational connection to Cambridge, one sourced step at a time.",
+    "category": "Computing",
+    "intro": "Knowledge is made by people, and people are connected to places. This short route follows two relationships in the Wikidata record, from a mathematician to a college and its university.",
+    "entities": [
+      "Q7251",
+      "Q924289",
+      "Q35794"
+    ],
+    "transitions": [
+      {
+        "id": "q7251$184851D8-CEB6-436F-AF57-5A462E7DB55C",
+        "heading": "Begin with a place of study",
+        "text": "Wikidata records King’s College as an institution where Alan Turing was educated. The relationship points from the person to the college: “educated at.”"
+      },
+      {
+        "id": "Q924289$73F3D8BE-B80E-4791-99DE-0B44C6BA5A07",
+        "heading": "Look beyond the college",
+        "text": "The next statement records King’s College as part of the University of Cambridge. A college and a university are distinct entities, joined here by a “part of” relationship."
+      }
+    ],
+    "summary": "Two directed relationships turn a familiar name into a route through institutions. Continue from any topic to see what else the source records.",
+    "sources": [],
+    "publication_status": "published",
+    "reviewed_at": "2026-11-06T08:44:04.618771+00:00",
+    "image": {
+      "file_title": "File:Alan Turing (1951) (crop).jpg",
+      "url": "/images/Q7251.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/6/66/Alan_Turing_%281951%29_%28crop%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Alan_Turing_(1951)_(crop).jpg",
+      "artist": "Elliott & Fry",
+      "license": "Public domain",
+      "license_url": "https://commons.wikimedia.org/wiki/Commons:Public_domain",
+      "modification": "Displayed with a CSS crop; original downloaded file retained.",
+      "retrieved_at": "2026-11-06T08:44:04.612442+00:00"
+    }
+  },
+  {
+    "id": "ada-and-babbage",
+    "title": "Follow an influence. Find an institution.",
+    "description": "Ada Lovelace, Charles Babbage and a route through Cambridge’s colleges.",
+    "category": "Computing",
+    "intro": "An influence can be the beginning of a journey. This route follows a recorded connection between Ada Lovelace and Charles Babbage, then changes perspective from people to institutions.",
+    "entities": [
+      "Q7259",
+      "Q46633",
+      "Q332342",
+      "Q35794"
+    ],
+    "transitions": [
+      {
+        "id": "Q7259$e1e1046f-46ea-b940-720a-c385b41f5b18",
+        "heading": "A recorded influence",
+        "text": "The Wikidata record for Ada Lovelace includes an “influenced by” statement pointing to Charles Babbage. Influence is the claim made by this statement; it does not describe every aspect of their relationship."
+      },
+      {
+        "id": "Q46633$8628DAE4-C325-4BC3-89A8-4744180700B3",
+        "heading": "From a person to a college",
+        "text": "Babbage’s record lists Trinity College under “educated at.” This identifies a place of study, without claiming that he completed a degree there."
+      },
+      {
+        "id": "Q332342$308AA8BA-D534-4F42-B570-528CCCA6E63E",
+        "heading": "An institution within an institution",
+        "text": "Trinity College is recorded as part of the University of Cambridge. The route now arrives at the university by following the college’s own statement."
+      }
+    ],
+    "summary": "A route can cross different kinds of relationships without changing their direction or meaning. Try exploring Babbage to discover other recorded connections.",
+    "sources": [],
+    "publication_status": "published",
+    "reviewed_at": "2026-11-06T08:44:04.618779+00:00",
+    "image": {
+      "file_title": "File:Ada Lovelace.jpg",
+      "url": "/images/Q7259.jpg",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/Ada_Lovelace.jpg/960px-Ada_Lovelace.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Ada_Lovelace.jpg",
+      "artist": "Margaret Sarah Carpenter",
+      "license": "Public domain",
+      "license_url": "https://commons.wikimedia.org/wiki/Commons:Public_domain",
+      "modification": "Displayed with a CSS crop; original downloaded file retained.",
+      "retrieved_at": "2026-11-06T08:44:04.612343+00:00"
+    }
+  },
+  {
+    "id": "curie-and-paris",
+    "title": "From a scientist to a city.",
+    "description": "Follow Marie Curie’s connection to an institute and its recorded headquarters in Paris.",
+    "category": "Science",
+    "intro": "Scientific work also has a geography. This route moves from Marie Curie to the Curie Institute, then to a city. The institute’s own account describes Curie’s role in creating its predecessor, the Institut du Radium.",
+    "entities": [
+      "Q7186",
+      "Q2451973",
+      "Q90"
+    ],
+    "transitions": [
+      {
+        "id": "Q7186$097a0248-485d-22a8-9465-8d3c2b6f1434",
+        "heading": "Follow an institutional connection",
+        "text": "Wikidata lists the Curie Institute under Marie Curie’s “employer” relationships. Historical institutions can change their names and structure; the institute’s history provides context beyond this compact statement."
+      },
+      {
+        "id": "Q2451973$b25fcba2-499d-2034-9d2a-7af55bdc021f",
+        "heading": "Place the institute on the map",
+        "text": "The institute’s record gives Paris as its headquarters location. This particular statement has no supporting reference recorded in the snapshot. The institute’s own site also lists Paris among its locations."
+      }
+    ],
+    "summary": "A graph statement is a useful starting point, and its references and limitations matter. Follow the original sources when you want the fuller history.",
+    "sources": [
+      {
+        "title": "Institut Curie: the legacy of Marie Curie",
+        "url": "https://institut-curie.org/legacy-marie-curie-perpetuating-spirit-pioneer"
+      },
+      {
+        "title": "Institut Curie: locations and origins",
+        "url": "https://institut-curie.org/about-institute-of-womens-cancers"
+      }
+    ],
+    "publication_status": "published",
+    "reviewed_at": "2026-11-06T08:44:04.618781+00:00",
+    "image": {
+      "file_title": "File:Marie Curie (1900) (cropped).jpg",
+      "url": "/images/Q7186.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/77/Marie_Curie_%281900%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Marie_Curie_(1900)_(cropped).jpg",
+      "artist": "Unknown author",
+      "license": "Public domain",
+      "license_url": "https://commons.wikimedia.org/wiki/Commons:Public_domain",
+      "modification": "Displayed with a CSS crop; original downloaded file retained.",
+      "retrieved_at": "2026-11-06T08:44:04.612452+00:00"
+    }
+  }
+]

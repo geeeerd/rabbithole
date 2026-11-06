@@ -1,0 +1,41 @@
+import React from 'react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { Stories, type Story } from './Stories';
+const first={id:'Q7251',label:'Alan Turing',description:'Computer scientist',source_url:'https://www.wikidata.org/wiki/Q7251'};
+const second={id:'Q924289',label:'King’s College',description:'A college',source_url:'https://www.wikidata.org/wiki/Q924289'};
+const story:Story={id:'turing',title:'A connection story',description:'A sourced journey',category:'Computing',reviewed_at:'2026-11-06T00:00:00Z',step_count:2,image:{url:'/images/Q7251.jpg',file_title:'File:Turing.jpg',artist:'Elliott & Fry',license:'Public domain',license_url:'https://commons.wikimedia.org/wiki/Commons:Public_domain',source_url:'https://commons.wikimedia.org/wiki/File:Turing.jpg',modification:'CSS crop'},intro:'This is an introduction.',entities:[first,second],transitions:[{heading:'A place to study',text:'Follow an education statement.',edge:{id:'statement',source:first.id,target:second.id,label:'educated at',property_id:'P69',references:[],qualifiers:{},source_url:first.source_url+'#P69'}}],summary:'Keep following the thread.',sources:[{title:'Additional source',url:'https://example.com/source'}]};
+beforeEach(()=>{history.replaceState(null,'','/stories');vi.stubGlobal('fetch',vi.fn(async(url:string)=>({ok:true,json:async()=>url==='/api/stories'?[story]:story})))});
+afterEach(()=>{cleanup();vi.unstubAllGlobals()});
+it('opens a story from the library, navigates chapters and continues into exploration',async()=>{
+ const explore=vi.fn();render(<Stories onExplore={explore}/>);
+ fireEvent.click(await screen.findByRole('link',{name:/A connection story/}));
+ await screen.findByText('This is an introduction.');
+ expect(location.search).toContain('story=turing');
+ fireEvent.click(screen.getByRole('button',{name:/Next chapter/}));
+ expect(location.search).toContain('step=1');
+ expect(screen.getByRole('heading',{name:'A place to study'})).toBe(document.activeElement);
+ expect(screen.getByText(/No supporting reference recorded/)).toBeTruthy();
+ expect(screen.getByText('Keep following the thread.')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:/Explore this topic/}));
+ expect(explore).toHaveBeenCalledWith(second.id);
+ fireEvent.click(screen.getByRole('button',{name:/Discover another story/}));
+ await screen.findByRole('link',{name:/A connection story/});
+ expect(location.search).toBe('');
+});
+it('restores a bookmarked chapter with portrait attribution and source links',async()=>{
+ history.replaceState(null,'','/stories?story=turing&step=1');render(<Stories onExplore={()=>{}}/>);
+ await screen.findByRole('heading',{name:'A place to study'});
+ expect(screen.getByRole('link',{name:'Public domain'}).getAttribute('href')).toBe(story.image.license_url);
+ expect(screen.getByRole('link',{name:/Additional source/}).getAttribute('href')).toBe('https://example.com/source');
+ expect((screen.getByRole('button',{name:/Previous/}) as HTMLButtonElement).disabled).toBe(false);
+});
+it('clamps an out-of-range chapter and supports retrying unavailable stories',async()=>{
+ history.replaceState(null,'','/stories?story=turing&step=999');
+ vi.mocked(fetch).mockResolvedValueOnce({ok:false,json:async()=>({detail:'Temporary failure'})} as Response);
+ render(<Stories onExplore={()=>{}}/>);
+ await screen.findByText('Temporary failure');
+ fireEvent.click(screen.getByRole('button',{name:'Retry'}));
+ await screen.findByRole('heading',{name:'A place to study'});
+ await waitFor(()=>expect(location.search).toContain('step=1'));
+});

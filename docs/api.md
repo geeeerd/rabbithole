@@ -25,3 +25,7 @@ All routes below have typed request/response contracts in `/docs`. Challenges us
 Game responses include start/destination/current entities, choices with source statements, visited entities, path edges, step count, hints, completion, snapshot version, model and a replacement token. Always use the latest token. Invalid, altered, expired or obsolete tokens return 422. The 12-step cap is enforced by the server.
 
 Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through the backend environment; an ephemeral random process key is used otherwise. Token replay is possible by design; there is no leaderboard, prize or competitive score. No tokens are included in share links.
+
+## Discovery Stories
+
+`GET /api/stories` returns published summaries with category, topic count, image attribution and review timestamp. `GET /api/stories/{id}` returns an ordered entity sequence, editorial text, transitions with exact source statements, additional source links and full media metadata. Unknown IDs return 404. Startup validation rejects missing or reversed transitions. These endpoints use bundled data and do not need external API access.

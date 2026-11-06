@@ -9,6 +9,7 @@ import os
 import secrets
 import time
 
+from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from .knowledge import SEEDS, Entity, Edge, extract, normalize
@@ -20,7 +21,8 @@ PROPERTIES = {"P69", "P361"}
 
 
 def collection():
-    raw = {key: value for file in sorted(SEEDS.glob("Q*.json")) for key, value in json.loads(file.read_text())["entities"].items()}
+    manifest = json.loads((SEEDS.parent / "challenges" / "collection.json").read_text())
+    raw = {key: value for qid in manifest["entities"] for key, value in json.loads((SEEDS / f"{qid}.json").read_text())["entities"].items()}
     nodes = {key: normalize(value).model_dump() for key, value in raw.items()}
     edges = {edge.id: edge.model_dump() for item in raw.values() for edge in extract(item) if edge.property_id in PROPERTIES and edge.target in nodes}
     version = hashlib.sha256(json.dumps({"nodes": nodes, "edges": edges}, sort_keys=True).encode()).hexdigest()[:16]

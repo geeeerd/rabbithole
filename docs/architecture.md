@@ -21,3 +21,9 @@ The challenge router builds a deterministic, versioned graph from the bundled Wi
 Progress is a signed, expiring token containing the fixed graph version, endpoints, actual statement IDs, hint count and expiry. Each action checks the signature, graph version, expiry and path continuity. Completion is derived server-side. HMAC keys come from `CHALLENGE_SIGNING_KEY` or a random process key. Local browser session storage retains only the token, which is revalidated on mount. Tokens can be replayed, and claims are not ranked against other users.
 
 The challenge UI lives at `/challenge`, separate from exploration URL/history state. It supports dead-end recovery, hints, undo, restart, practice pairs, source review and copying a result. Existing tests cover expiry, altered tokens, reversed moves, invalid pairs, complete playthroughs without upstream calls, hint accounting, recovery and frontend submission behavior.
+
+## Discovery Stories
+
+`data/stories/catalog.json` stores publication status, narratives, ordered entities, exact transition statement IDs, additional source links and portrait attribution. `stories.py` validates that each transition belongs to its source and points to the next entity before exposing published content. Frontend chapters use `/stories?story=<id>&step=<zero-based-index>`, restore browser history, clamp invalid chapter indices and move keyboard focus to the chapter heading. Stories have a separate route so explorer history cannot overwrite their URLs.
+
+Public-domain portraits are served locally with attribution rather than fetched at reading time. Wikidata descriptions, original editorial text and external institutional sources remain distinct. The challenge dataset is pinned to its own manifest so adding unrelated story seeds does not change the challenge graph or invalidate tokens.

@@ -9,7 +9,8 @@ The original product plan is preserved in `blueprint.md`.
 - [ ] Complete discovery MVP: accessibility audit, graph rendering/keyboard interaction tests, performance profiling and reproducible beta deployment.
 - [x] First Connection Challenge: versioned directed snapshot, typed APIs, signed move/path validation, hints, undo, progress recovery, result sharing and custom practice pairs.
 - [ ] Expand challenges: additional reviewed daily puzzles, category modes, larger cached collections and production anti-abuse controls. The starter daily puzzle repeats; practice is limited to the bundled graph.
-- [ ] Discovery stories: reviewed narratives and validated transitions, with licensed media.
+- [x] Discovery Stories: three curated narratives, startup-validated statement sequences, chapter navigation/deep links, public-domain portraits, attribution and story-to-graph handoff.
+- [ ] Expand stories: broader subject coverage, further independent source review and a contribution/review workflow.
 - [ ] Public beta: deployment, monitoring, request limits, load tests, contribution templates and license audit.
 - [ ] TimeAtlas: timelines, geography and historical uncertainty.
 
