@@ -1,0 +1,22 @@
+{
+  "source": "Wikidata",
+  "license": "CC0-1.0",
+  "downloaded_at": "2026-11-06T08:11:59.743279+00:00",
+  "entities": [
+    "Q924289",
+    "Q8078",
+    "Q867530",
+    "Q7251",
+    "Q8789",
+    "Q2278254",
+    "Q35794",
+    "Q66135280",
+    "Q21578",
+    "Q220798",
+    "Q897511",
+    "Q395",
+    "Q21198"
+  ],
+  "endpoint": "https://www.wikidata.org/wiki/Special:EntityData/{id}.json",
+  "note": "Original statements; not independently verified. See entity lastrevid and modified metadata."
+}
