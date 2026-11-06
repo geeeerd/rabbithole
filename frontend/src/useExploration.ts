@@ -8,7 +8,7 @@ async function fetchGraph(id: string, signal: AbortSignal): Promise<Graph> {
   return response.json();
 }
 
-export function useExploration() {
+export function useExploration(enabled = true) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const current = useRef<Snapshot | null>(null);
   const controller = useRef<AbortController | null>(null);
@@ -67,6 +67,7 @@ export function useExploration() {
   }
 
   useEffect(() => {
+    if (!enabled) return;
     const saved = history.state;
     if (saved?.rabbitHole && saved.snapshot && trailUrl(saved.snapshot.trail) === location.search) {
       positionRef.current = { index: saved.index, end: saved.end ?? saved.index };
@@ -87,12 +88,13 @@ export function useExploration() {
     };
     window.addEventListener('popstate', onPop);
     return () => { controller.current?.abort(); window.removeEventListener('popstate', onPop); };
-  }, []);
+  }, [enabled]);
 
   // Store complete data in session history: Back/Forward also works offline.
   useEffect(() => {
+    if (!enabled) return;
     history.replaceState({ rabbitHole: true, snapshot, index: positionRef.current.index, end: positionRef.current.end }, '', snapshot ? trailUrl(snapshot.trail) : location.href);
-  }, [snapshot]);
+  }, [snapshot, enabled]);
 
   function explore(id: string, expand = false) {
     const previous = current.current;

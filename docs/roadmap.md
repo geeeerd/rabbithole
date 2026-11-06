@@ -7,7 +7,8 @@ The original product plan is preserved in `blueprint.md`.
 - [x] First graph: Cytoscape, pan/zoom, expansion, ID deduplication, recentering, profiles and statement inspection.
 - [x] Exploration continuity: branch collapse with shared-neighbor preservation, Back/Forward snapshots, URL serialization of expanded topics and view settings, and frontend interaction tests.
 - [ ] Complete discovery MVP: accessibility audit, graph rendering/keyboard interaction tests, performance profiling and reproducible beta deployment.
-- [ ] Validated connection challenges: cached directed graph, move/path validation, hints and reproducible daily challenges.
+- [x] First Connection Challenge: versioned directed snapshot, typed APIs, signed move/path validation, hints, undo, progress recovery, result sharing and custom practice pairs.
+- [ ] Expand challenges: additional reviewed daily puzzles, category modes, larger cached collections and production anti-abuse controls. The starter daily puzzle repeats; practice is limited to the bundled graph.
 - [ ] Discovery stories: reviewed narratives and validated transitions, with licensed media.
 - [ ] Public beta: deployment, monitoring, request limits, load tests, contribution templates and license audit.
 - [ ] TimeAtlas: timelines, geography and historical uncertainty.
