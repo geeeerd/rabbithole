@@ -63,7 +63,7 @@ async def request(params):
     if key in cache and time.monotonic() - cache[key][0] < 3600:
         return cache[key][1]
     async with lock:
-        async with httpx.AsyncClient(timeout=10, headers={"User-Agent": os.getenv("WIKIMEDIA_USER_AGENT", "RabbitHole/0.1 (local development knowledge explorer)")}) as client:
+        async with httpx.AsyncClient(timeout=10, headers={"User-Agent": os.getenv("WIKIMEDIA_USER_AGENT", "RabbitHole/0.1 (https://github.com/geeeerd/rabbithole; open-source knowledge explorer)")}) as client:
             for attempt in range(3):
                 response = await client.get("https://www.wikidata.org/w/api.php", params={"format": "json", "maxlag": 5, **params})
                 if response.status_code == 429 or response.status_code >= 500:

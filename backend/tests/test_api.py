@@ -31,3 +31,43 @@ def test_offline_graph(monkeypatch):
 
 def test_unsupported_statements():
     assert main.extract({"id":"Q1", "claims":{"P69":[{"mainsnak":{"snaktype":"novalue"}}]}}) == []
+
+def test_live_contract_with_mocked_upstream(monkeypatch):
+    async def fixture_request(params):
+        if params['action'] == 'wbsearchentities':
+            return {'search': [{'id':'Q7251','label':'Alan Turing','description':'Computer scientist'}]}
+        result = {}
+        for qid in params['ids'].split('|'):
+            f = main.SEEDS / f'{qid}.json'
+            if f.exists():
+                result.update(json.loads(f.read_text())['entities'])
+        return {'entities': result}
+    monkeypatch.setattr(main, 'request', fixture_request)
+    assert client.get('/api/search?q=Turing').json()['offline'] is False
+    graph = client.get('/api/graph?entity=Q7251').json()
+    assert graph['offline'] is False
+    assert len(graph['edges']) <= 12
+    assert graph['truncated'] is True
+    assert client.get('/api/entities/Q7251').json()['label'] == 'Alan Turing'
+    assert client.get('/api/entities/Q999999999999').status_code == 404
+
+
+def test_cache_prevents_duplicate_upstream_calls(monkeypatch):
+    calls = []
+    class FakeClient:
+        def __init__(self, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): pass
+        async def get(self, url, params):
+            calls.append(params)
+            return httpx.Response(200, json={'search': []}, request=httpx.Request('GET',url))
+    import httpx
+    monkeypatch.setattr(main.httpx, 'AsyncClient', FakeClient)
+    main.cache.clear()
+    async def run():
+        params = {'action':'wbsearchentities','search':'cache-test'}
+        assert await main.request(params) == {'search': []}
+        assert await main.request(params) == {'search': []}
+    asyncio.run(run())
+    assert len(calls) == 1
+    main.cache.clear()
