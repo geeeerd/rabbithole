@@ -29,10 +29,12 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 ## Working now
 
 - Debounced Wikidata topic search and autocomplete.
-- Directed, labeled graph with zoom, pan, progressive expansion, reset and recentering.
+- Directed, labeled graph with zoom, pan, progressive expansion, branch collapse, reset and recentering.
+- Branch chips and Back/Forward controls with graph snapshots for offline history navigation.
 - Entity profiles, property filters and accessible topic/connection lists.
 - Statement inspection including references, qualifiers and original source links.
-- Shareable root-topic URLs, browser navigation and light/dark themes.
+- Shareable exploration URLs preserving the root, up to eight expanded branches, selected topic and relationship filter.
+- Light/dark themes.
 - Timeouts, bounded upstream concurrency, retries and a bounded one-hour in-memory cache.
 - A real Wikidata snapshot around Alan Turing for offline exploration; fallback is visibly labeled.
 
@@ -45,6 +47,7 @@ uv run pytest -q
 
 ```sh
 cd frontend
+npm test
 npm run build
 ```
 
@@ -52,7 +55,7 @@ CI runs the same checks. Both package managers have committed lockfiles.
 
 ## Scope and limitations
 
-This is the first vertical slice, not the full public beta. Challenges, stories, Wikipedia summaries, Commons media, persistent storage, production rate limiting, branch collapse and forward exploration history UI remain on the roadmap. Share links preserve the root topic, not all expanded branches. The live API is an outbound neighborhood only, capped at 12 statements; the frontend caps the graph at 60 nodes. Search and fallback support English. The offline collection covers a small Turing neighborhood and may not support further expansions.
+This is the first vertical slice, not the full public beta. Challenges, stories, Wikipedia summaries, Commons media, persistent storage, production rate limiting, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live API is an outbound neighborhood only, capped at 12 statements; the frontend caps the graph at 60 nodes and eight expanded branches. Search and fallback support English. The offline collection covers a small Turing neighborhood and may not support further expansions.
 
 The backend is for local development. Before public deployment, configure an identifying Wikimedia User-Agent with contact information, request rate limiting, monitoring, a deployment proxy and persistent caching as needed. Cached data timestamps currently indicate response assembly time; the seed manifest records snapshot time. In-memory caches reset on process restart.
 
