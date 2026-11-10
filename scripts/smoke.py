@@ -4,7 +4,7 @@ import argparse
 from html.parser import HTMLParser
 import json
 import time
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
@@ -36,7 +36,9 @@ def smoke(base: str, wait: int) -> None:
         try:
             assert api("/api/health")["status"] == "ok"
             break
-        except (URLError, TimeoutError):
+        except OSError as error:
+            if isinstance(error, HTTPError) and error.code not in (502, 503, 504):
+                raise
             if time.monotonic() >= deadline:
                 raise
             time.sleep(0.25)

@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build --tag rabbithole:ci .
-      - run: docker run --rm --detach --name rabbithole-ci --publish 127.0.0.1:8000:8000 rabbithole:ci
+      - run: docker run --detach --name rabbithole-ci --publish 127.0.0.1:8000:8000 rabbithole:ci
       - run: python3 scripts/smoke.py --wait 30
       - if: failure()
-        run: docker logs rabbithole-ci
+        run: docker logs rabbithole-ci || true
