@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { buildSnapshot, MAX_BRANCHES, MAX_EXTRA_PAGES, mergeGraph, mergePage, readTrail, trailUrl } from './exploration';
-import type { Entity, Graph, Snapshot } from './exploration';
+import { buildSnapshot, MAX_BRANCHES, MAX_EXTRA_PAGES, MAX_LINK_SCANS, LINK_SOURCE_LIMIT, mergeGraph, mergePage, readTrail, trailUrl } from './exploration';
+import type { Entity, Graph, LinkScan, Snapshot } from './exploration';
 
 async function fetchGraph(id: string, signal: AbortSignal, offset?: number): Promise<Graph> {
   const params = new URLSearchParams({ entity: id });
@@ -8,6 +8,26 @@ async function fetchGraph(id: string, signal: AbortSignal, offset?: number): Pro
   const response = await fetch('/api/graph?' + params, { signal });
   if (!response.ok) throw new Error((await response.json()).detail || 'Could not load this topic. Please retry.');
   return response.json();
+}
+
+function nextSources(topics: string[], scans: LinkScan[]) {
+  const scanned = new Set(scans.flatMap(scan => scan.scanned_ids));
+  return topics.filter(id => !scanned.has(id)).sort().slice(0, LINK_SOURCE_LIMIT);
+}
+
+async function scanLinks(snapshot: Snapshot, signal: AbortSignal): Promise<Snapshot> {
+  const topics = mergeGraph(snapshot).nodes.map(node => node.id);
+  const scans = snapshot.links ?? [];
+  const sources = nextSources(topics, scans);
+  if (topics.length < 2 || !sources.length || scans.length >= MAX_LINK_SCANS) return snapshot;
+  const response = await fetch('/api/graph/links', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, signal,
+    body: JSON.stringify({ topics, sources }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : 'Could not check these topics for links.');
+  const links = [...scans, result as LinkScan];
+  return { ...snapshot, links, trail: { ...snapshot.trail, linkScans: links.length } };
 }
 
 export function useExploration(enabled = true) {
@@ -74,7 +94,20 @@ export function useExploration(enabled = true) {
       remaining.delete(id);
       buildSnapshot({ ...trail, expanded: Object.keys(bundles).filter(key => key !== trail.root), pages }, bundles);
     }
-    return buildSnapshot({ ...trail, pages }, bundles);
+    let snapshot = buildSnapshot({ ...trail, pages }, bundles);
+    for (let index = 0; index < (trail.linkScans ?? 0); index++) {
+      try {
+        const next = await scanLinks(snapshot, signal);
+        if (next === snapshot) break;
+        snapshot = next;
+      } catch (failure) {
+        if (signal.aborted) throw failure;
+        setError('Some cross-links could not be restored. The rest of your trail is available.');
+        setRetryAction(() => loadLinks);
+        break;
+      }
+    }
+    return snapshot;
     }, false, restoreUrl);
   }
 
@@ -135,6 +168,12 @@ export function useExploration(enabled = true) {
     }, true, () => loadMore(id));
   }
 
+  function loadLinks() {
+    const previous = current.current;
+    if (!previous) return;
+    void run(signal => scanLinks(previous, signal), true, loadLinks);
+  }
+
   function updateView(selected: string, filter: string) {
     if (!current.current) return;
     const next = { ...current.current, trail: { ...current.current.trail, selected, filter } };
@@ -149,9 +188,13 @@ export function useExploration(enabled = true) {
   function home() {
     controller.current?.abort(); setBusy(false); setError(''); commit(null, true);
   }
-  const graph = useMemo(() => snapshot ? mergeGraph(snapshot) : null, [snapshot?.bundles]);
+  const graph = useMemo(() => snapshot ? mergeGraph(snapshot) : null, [snapshot?.bundles, snapshot?.links]);
   const selected: Entity | null = graph?.nodes.find(n => n.id === snapshot?.trail.selected) || null;
-  return { graph, selected, snapshot, busy, error, setError, retry: () => retryAction?.(), explore, loadMore, home, collapse,
+  const scans = snapshot?.links ?? [];
+  const checkedTopics = new Set(scans.flatMap(scan => scan.scanned_ids)).size;
+  const canLoadLinks = !!graph && graph.nodes.length >= 2 && scans.length < MAX_LINK_SCANS
+    && nextSources(graph.nodes.map(node => node.id), scans).length > 0;
+  return { graph, selected, snapshot, busy, error, setError, loadLinks, checkedTopics, canLoadLinks, retry: () => retryAction?.(), explore, loadMore, home, collapse,
     filter: snapshot?.trail.filter || 'all',
     setSelected: (entity: Entity | null) => { if (entity && snapshot) updateView(entity.id, snapshot.trail.filter); },
     setFilter: (filter: string) => { if (snapshot) updateView(snapshot.trail.selected, filter); },

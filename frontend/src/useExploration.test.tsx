@@ -6,9 +6,9 @@ import { fixture } from './testFixtures';
 const graphs = {Q1:fixture('Q1',['Q2']),Q2:fixture('Q2',['Q3']),Q3:fixture('Q3',['Q4'])};
 function Harness() {
   const e = useExploration();
-  return <><output data-testid="nodes">{e.graph?.nodes.map(n=>n.id).join(',')}</output><output data-testid="selected">{e.selected?.id}</output>
+  return <><output data-testid="edges">{e.graph?.edges.map(edge=>edge.id).join(',')}</output><output data-testid="nodes">{e.graph?.nodes.map(n=>n.id).join(',')}</output><output data-testid="selected">{e.selected?.id}</output>
     <output data-testid="filter">{e.filter}</output><output data-testid="error">{e.error}</output><output data-testid="busy">{String(e.busy)}</output>
-    <button onClick={()=>e.explore('Q1')}>Start</button><button onClick={()=>e.loadMore('Q1')}>More</button><button onClick={()=>e.explore('Q2',true)}>Expand</button>
+    <button onClick={()=>e.explore('Q1')}>Start</button><button onClick={()=>e.loadMore('Q1')}>More</button><button onClick={e.loadLinks}>Cross-links</button><button onClick={()=>e.explore('Q2',true)}>Expand</button>
     <button onClick={()=>e.collapse('Q2')}>Collapse</button><button onClick={()=>e.home()}>Home</button>
     <button onClick={()=>e.setFilter('P361')}>Filter</button><button onClick={e.retry}>Retry</button>
   </>;
@@ -105,4 +105,27 @@ it('adds another connection page and restores a branch reached through that page
   render(<Harness/>);
   await waitFor(()=>expect(screen.getByTestId('nodes').textContent).toBe('Q1,Q2,Q3,Q4'));
   expect(screen.getByTestId('selected').textContent).toBe('Q4');
+});
+
+it('checks only visible topics and preserves discovered cross-links when sharing a trail', async () => {
+  const first = fixture('Q1', ['Q2', 'Q3']);
+  const scan = { edges: fixture('Q2',['Q3']).edges, scanned_ids: ['Q1','Q2','Q3'], offline: false,
+    truncated: false, saved_edge_ids: [], fetched_at: first.fetched_at };
+  vi.mocked(fetch).mockImplementation(async (url) => ({
+    ok: true, json: async () => String(url).endsWith('/links') ? scan : first,
+  }) as Response);
+  const view = render(<Harness/>);
+  fireEvent.click(screen.getByText('Start'));
+  await waitFor(()=>expect(screen.getByTestId('nodes').textContent).toBe('Q1,Q2,Q3'));
+  fireEvent.click(screen.getByText('Cross-links'));
+  await waitFor(()=>expect(screen.getByTestId('edges').textContent).toContain('Q2-Q3'));
+  expect(screen.getByTestId('nodes').textContent).toBe('Q1,Q2,Q3');
+  expect(new URLSearchParams(location.search).get('links')).toBe('1');
+  expect(fetch).toHaveBeenCalledWith('/api/graph/links', expect.objectContaining({
+    body: JSON.stringify({ topics: ['Q1','Q2','Q3'], sources: ['Q1','Q2','Q3'] }),
+  }));
+  view.unmount();
+  history.replaceState(null, '', '/?entity=Q1&links=1');
+  render(<Harness/>);
+  await waitFor(()=>expect(screen.getByTestId('edges').textContent).toContain('Q2-Q3'));
 });

@@ -5,6 +5,10 @@ from functools import lru_cache
 import json
 import re
 
+from typing import Annotated
+
+from pydantic import BaseModel, Field
+
 from .knowledge import Edge, PROPERTIES, SEEDS
 
 PAGE_SIZE = 24
@@ -19,6 +23,25 @@ GRAPH_LABELS = {
     "P155": "follows", "P156": "followed by", "P178": "developer", "P287": "designed by",
     "P61": "discoverer or inventor", "P366": "has use", "P2579": "studied by",
 }
+
+
+TopicId = Annotated[str, Field(pattern=r"^Q[1-9][0-9]{0,11}$")]
+LINK_SOURCE_LIMIT = 8
+LINK_EDGE_LIMIT = 48
+
+
+class LinkRequest(BaseModel):
+    topics: list[TopicId] = Field(min_length=2, max_length=100)
+    sources: list[TopicId] = Field(min_length=1, max_length=LINK_SOURCE_LIMIT)
+
+
+class LinkScan(BaseModel):
+    edges: list[Edge]
+    scanned_ids: list[str]
+    saved_edge_ids: list[str]
+    offline: bool
+    truncated: bool
+    fetched_at: str
 
 
 def graph_statements(item: dict) -> list[Edge]:

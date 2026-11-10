@@ -78,3 +78,23 @@ def test_cache_prevents_duplicate_upstream_calls(monkeypatch):
     asyncio.run(run())
     assert len(calls) == 1
     main.wikidata.cache.clear()
+
+
+def test_link_scan_checks_only_requested_visible_sources(monkeypatch):
+    calls = []
+
+    async def fixture_request(params):
+        ids = params['ids'].split('|')
+        calls.append(ids)
+        return {'entities': main.seed_entities(ids)}
+
+    monkeypatch.setattr(main, 'request', fixture_request)
+    topics = ['Q7251', 'Q924289', 'Q35794']
+    bad = client.post('/api/graph/links', json={'topics': topics, 'sources': ['Q1']})
+    assert bad.status_code == 422 and not calls
+    scan = client.post('/api/graph/links', json={'topics': topics, 'sources': ['Q924289']}).json()
+    assert scan['scanned_ids'] == ['Q924289']
+    assert calls[0] == ['Q924289']
+    assert any(edge['source'] == 'Q924289' and edge['target'] == 'Q35794' for edge in scan['edges'])
+    assert all(edge['source'] == 'Q924289' and edge['target'] in topics for edge in scan['edges'])
+    assert not scan['offline'] and not scan['saved_edge_ids']

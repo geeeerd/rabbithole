@@ -39,3 +39,5 @@ The explorer uses all nondeprecated item-valued statements from a root. The firs
 ## Timeline
 
 TimeAtlas extracts recorded dates and relationship qualifiers from a single item, preserving Gregorian or Julian calendar labels, BCE years and century-to-day precision. It flags sourcing qualifiers and uncertainty fields without interpreting them as exact historical dates. Direct topic dates are retained before relationship dates when the 40-entry cap applies. A saved-record mode can run without upstream access. See the [Wikidata date model](https://www.wikidata.org/wiki/Help:Dates).
+
+An explicit cross-link check requests statements for up to eight visible topics at a time and keeps only edges whose endpoints are both visible. Up to four checks are saved in the trail URL. When a page or branch changes the node set, cross-link checks can run again against that set. If a check cannot be replayed, the shared trail still opens with its neighborhoods.

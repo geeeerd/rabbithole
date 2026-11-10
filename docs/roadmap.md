@@ -15,7 +15,7 @@ The original product plan is preserved in `blueprint.md`.
 - [ ] Expand stories: broader subject coverage, further independent source review and a contribution/review workflow.
 - [x] Release build: same-origin container, API and upstream limits, GitHub Actions build and smoke test.
 - [ ] Public beta: hosted deployment, monitoring, load tests, contribution templates and license audit.
-- [x] Denser exploration with broader Wikidata statements, more connection pages, saved incoming links and saved links between visible topics.
+- [x] Denser exploration with broader Wikidata statements, more connection pages, saved incoming links and saved links between visible topics, and live cross-link checks.
 - [x] TimeAtlas timeline with recorded precision, calendar and statement evidence.
 - [ ] TimeAtlas geography and historical boundary views.
 

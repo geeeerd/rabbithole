@@ -7,7 +7,10 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query
 
 from .challenges import router as challenge_router
-from .connections import GRAPH_LABELS, PAGE_SIZE, graph_statements, saved_links, varied_order
+from .connections import (
+    GRAPH_LABELS, LINK_EDGE_LIMIT, PAGE_SIZE, LinkRequest, LinkScan,
+    graph_statements, saved_links, varied_order,
+)
 from .knowledge import SEEDS, Entity, Graph, extract, normalize, validate
 from .stories import router as story_router
 from .timeline import Timeline, events
@@ -135,6 +138,38 @@ async def graph(entity: str = "Q7251", offset: Annotated[int, Query(ge=0, le=100
         truncated=next_offset is not None, offline=offline or fallback,
         fetched_at=datetime.now(timezone.utc).isoformat(), next_offset=next_offset,
         total_statements=len(ordered), saved_edge_ids=[edge.id for edge in visible if offline or edge.source != entity],
+    )
+
+
+@app.post("/api/graph/links", response_model=LinkScan)
+async def graph_links(query: LinkRequest):
+    visible = set(query.topics)
+    sources = list(dict.fromkeys(query.sources))
+    if len(visible) < 2 or not set(sources) <= visible:
+        raise HTTPException(422, "Choose source topics already visible in the graph.")
+
+    records, offline = await entities(sources)
+    scanned = [key for key in sources if key in records and "missing" not in records[key]]
+    if not scanned:
+        raise HTTPException(503, "No records were available for these topics. Try again shortly.")
+    links = varied_order([
+        edge for key in scanned for edge in graph_statements(records[key])
+        if edge.source in visible and edge.target in visible
+    ])
+    edges = links[:LINK_EDGE_LIMIT]
+    properties = list(dict.fromkeys(edge.property_id for edge in edges if edge.property_id not in GRAPH_LABELS))
+    if properties and not offline:
+        metadata, _ = await entities(properties, include_claims=False)
+        edges = [
+            edge.model_copy(update={"label": normalize(metadata[edge.property_id]).label})
+            if edge.property_id in metadata and metadata[edge.property_id].get("labels") else edge
+            for edge in edges
+        ]
+    return LinkScan(
+        edges=edges, scanned_ids=scanned,
+        saved_edge_ids=[edge.id for edge in edges] if offline else [],
+        offline=offline, truncated=len(links) > LINK_EDGE_LIMIT,
+        fetched_at=datetime.now(timezone.utc).isoformat(),
     )
 
 

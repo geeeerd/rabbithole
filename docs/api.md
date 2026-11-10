@@ -35,3 +35,5 @@ Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through th
 `GET /api/graph?entity=Q7251&offset=0` and the entity neighbors endpoint return up to 24 root statements per page, plus saved cross-links among visible topics. Pass the returned `next_offset` to load another page. A null offset indicates the end of the available pages. `total_statements` counts root statements before metadata resolution. `saved_edge_ids` marks statements obtained from bundled records. Source and target IDs always follow the original direction.
 
 `GET /api/entities/Q7251/timeline` returns up to 40 recorded dates, their original precision and calendar, uncertainty markers, references counts and source URLs. `?offline=true` selects the bundled records and skips live requests.
+
+`POST /api/graph/links` accepts `topics` (2–100 visible item IDs) and `sources` (1–8 of those IDs). It returns up to 48 directed statements between those topics, with checked source IDs and saved-record provenance. It does not fetch arbitrary linked topics.
