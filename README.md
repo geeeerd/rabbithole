@@ -29,7 +29,7 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 ## Working now
 
 - Debounced Wikidata search with keyboard autocomplete, announcements, no-results states and retry.
-- Directed graph with broader Wikidata relationships, saved cross-links, zoom, pan, expansion, branch collapse and recentering. **More connections** adds another page for the selected topic. **Find cross-links** looks for additional statements between visible topics. Trace a route through the current graph from the topic profile.
+- Directed graph with broader Wikidata relationships, saved cross-links, zoom, pan, expansion, branch collapse and recentering. **More connections** adds another page for the selected topic. **Find cross-links** looks for additional statements between visible topics. **Find incoming connections** checks for statements pointing to the selected topic from other Wikidata items. Trace a route through the current graph from the topic profile.
 - Branch chips and Back/Forward controls with graph snapshots for offline history navigation.
 - Entity profiles with recorded facts, on-demand Wikipedia background, property filters and accessible topic/connection lists.
 - Statement inspection including references, qualifiers and original source links.
@@ -59,7 +59,7 @@ CI runs the tests and builds a release container with a smoke test. Both package
 
 ## Scope and limitations
 
-This is the first vertical slice, not the full public beta. Additional reviewed challenges and stories, persistent storage, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live graph pages through item-valued outgoing statements and supplements them with incoming and cross-links from the bundled collection. A trail supports up to 100 topics, eight expanded branches and six additional pages. Search and fallback support English. The offline collection covers a small group of bundled topics.
+Additional reviewed challenges and stories, persistent storage, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection. The graph pages through outgoing statements, checks incoming statements and can discover extra links between visible topics. A trail supports up to 100 topics, eight expanded branches, six additional outgoing pages and four incoming checks. Search and fallback support English. The offline collection covers a small group of bundled topics.
 
 The daily rotation follows three reviewed routes from the Discovery Stories catalog. Dated links replay the same puzzle. Each practice collection has its own bundled topics and directed relationship types. Signed progress expires after 24 hours. Set `CHALLENGE_SIGNING_KEY` in the backend environment for progress to survive server restarts; without it, a temporary process key is used. There is no leaderboard or claim of a globally shortest route.
 

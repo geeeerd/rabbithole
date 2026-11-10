@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { buildSnapshot, MAX_BRANCHES, MAX_EXTRA_PAGES, MAX_LINK_SCANS, LINK_SOURCE_LIMIT, mergeGraph, mergePage, readTrail, trailUrl } from './exploration';
-import type { Entity, Graph, LinkScan, Snapshot } from './exploration';
+import { buildSnapshot, MAX_BRANCHES, MAX_EXTRA_PAGES, MAX_INCOMING_PAGES, MAX_LINK_SCANS, LINK_SOURCE_LIMIT, mergeGraph, mergeIncoming, mergePage, pageCount, readTrail, trailUrl } from './exploration';
+import type { Entity, Graph, IncomingPage, LinkScan, Snapshot } from './exploration';
 
 async function fetchGraph(id: string, signal: AbortSignal, offset?: number): Promise<Graph> {
   const params = new URLSearchParams({ entity: id });
@@ -13,6 +13,14 @@ async function fetchGraph(id: string, signal: AbortSignal, offset?: number): Pro
 function nextSources(topics: string[], scans: LinkScan[]) {
   const scanned = new Set(scans.flatMap(scan => scan.scanned_ids));
   return topics.filter(id => !scanned.has(id)).sort().slice(0, LINK_SOURCE_LIMIT);
+}
+
+async function fetchIncoming(id: string, signal: AbortSignal, cursor?: string): Promise<IncomingPage> {
+  const query = cursor ? '?' + new URLSearchParams({ cursor }) : '';
+  const response = await fetch(`/api/entities/${id}/incoming${query}`, { signal });
+  const result = await response.json();
+  if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : 'Could not check incoming connections.');
+  return result;
 }
 
 async function scanLinks(snapshot: Snapshot, signal: AbortSignal): Promise<Snapshot> {
@@ -75,12 +83,17 @@ export function useExploration(enabled = true) {
       if (!trail) return null;
       const bundles: Record<string, Graph> = {};
     const pages: Record<string, number> = {};
+    const incoming: Record<string, number> = {};
     const load = async (id: string) => {
       let bundle = await fetchGraph(id, signal);
       const count = trail.pages?.[id] ?? 0;
       for (let index = 0; index < count && bundle.next_offset != null; index++) {
         bundle = mergePage(bundle, await fetchGraph(id, signal, bundle.next_offset));
         pages[id] = index + 1;
+      }
+      for (let index = 0; index < (trail.incoming?.[id] ?? 0) && bundle.incoming_cursor !== null; index++) {
+        bundle = mergeIncoming(bundle, await fetchIncoming(id, signal, bundle.incoming_cursor));
+        incoming[id] = index + 1;
       }
       bundles[id] = bundle;
     };
@@ -92,9 +105,9 @@ export function useExploration(enabled = true) {
       if (!id) throw new Error('This exploration link contains a disconnected branch.');
       await load(id);
       remaining.delete(id);
-      buildSnapshot({ ...trail, expanded: Object.keys(bundles).filter(key => key !== trail.root), pages }, bundles);
+      buildSnapshot({ ...trail, expanded: Object.keys(bundles).filter(key => key !== trail.root), pages, incoming }, bundles);
     }
-    let snapshot = buildSnapshot({ ...trail, pages }, bundles);
+    let snapshot = buildSnapshot({ ...trail, pages, incoming }, bundles);
     for (let index = 0; index < (trail.linkScans ?? 0); index++) {
       try {
         const next = await scanLinks(snapshot, signal);
@@ -159,13 +172,26 @@ export function useExploration(enabled = true) {
     const offset = bundle?.next_offset;
     if (!previous || !bundle || offset == null) return;
     const pages = previous.trail.pages ?? {};
-    const count = Object.values(pages).reduce((total, amount) => total + amount, 0);
     void run(async signal => {
-      if (count >= MAX_EXTRA_PAGES) throw new Error('This trail has reached its page limit. Recenter a topic or collapse a branch to continue.');
+      if (pageCount(pages) >= MAX_EXTRA_PAGES) throw new Error('This trail has reached its page limit. Recenter a topic or collapse a branch to continue.');
       const next = await fetchGraph(id, signal, offset);
       return buildSnapshot({ ...previous.trail, pages: { ...pages, [id]: (pages[id] ?? 0) + 1 } },
         { ...previous.bundles, [id]: mergePage(bundle, next) });
     }, true, () => loadMore(id));
+  }
+
+  function loadIncoming(id: string) {
+    const previous = current.current;
+    const bundle = previous?.bundles[id];
+    if (!previous || !bundle || bundle.incoming_cursor === null) return;
+    const incoming = previous.trail.incoming ?? {};
+    if (pageCount(incoming) >= MAX_INCOMING_PAGES) return;
+    const cursor = bundle.incoming_cursor;
+    void run(async signal => {
+      const page = await fetchIncoming(id, signal, cursor);
+      return buildSnapshot({ ...previous.trail, incoming: { ...incoming, [id]: (incoming[id] ?? 0) + 1 } },
+        { ...previous.bundles, [id]: mergeIncoming(bundle, page) });
+    }, true, () => loadIncoming(id));
   }
 
   function loadLinks() {
@@ -194,7 +220,7 @@ export function useExploration(enabled = true) {
   const checkedTopics = new Set(scans.flatMap(scan => scan.scanned_ids)).size;
   const canLoadLinks = !!graph && graph.nodes.length >= 2 && scans.length < MAX_LINK_SCANS
     && nextSources(graph.nodes.map(node => node.id), scans).length > 0;
-  return { graph, selected, snapshot, busy, error, setError, loadLinks, checkedTopics, canLoadLinks, retry: () => retryAction?.(), explore, loadMore, home, collapse,
+  return { graph, selected, snapshot, busy, error, setError, loadLinks, checkedTopics, canLoadLinks, retry: () => retryAction?.(), explore, loadMore, loadIncoming, home, collapse,
     filter: snapshot?.trail.filter || 'all',
     setSelected: (entity: Entity | null) => { if (entity && snapshot) updateView(entity.id, snapshot.trail.filter); },
     setFilter: (filter: string) => { if (snapshot) updateView(snapshot.trail.selected, filter); },

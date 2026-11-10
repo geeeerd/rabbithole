@@ -16,7 +16,7 @@ The original product plan is preserved in `blueprint.md`.
 - [x] Release build: same-origin container, API and upstream limits, GitHub Actions build and smoke test.
 - [x] Contribution templates, source correction links and browser dependency notices verified at build time.
 - [ ] Public beta: hosted deployment, alerting and representative traffic tests. The release checks include a controlled local burst.
-- [x] Denser exploration with broader Wikidata statements, more connection pages, saved incoming links and saved links between visible topics, and live cross-link checks.
+- [x] Denser exploration with broader Wikidata statements, more connection pages, and live checks for incoming statements and links between visible topics.
 - [x] Topic facts, attributed Wikipedia background and route tracing through visible statements.
 - [x] TimeAtlas timeline with recorded precision, calendar and statement evidence.
 - [x] TimeAtlas geography with interactive place pins, saved coordinates and linked source statements.

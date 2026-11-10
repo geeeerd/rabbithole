@@ -9,7 +9,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from .knowledge import Edge, PROPERTIES, SEEDS
+from .knowledge import Edge, Entity, PROPERTIES, SEEDS
 
 PAGE_SIZE = 24
 ITEM_ID = re.compile(r"Q[1-9][0-9]{0,11}")
@@ -41,6 +41,14 @@ class LinkScan(BaseModel):
     saved_edge_ids: list[str]
     offline: bool
     truncated: bool
+    fetched_at: str
+
+
+class IncomingPage(BaseModel):
+    nodes: list[Entity]
+    edges: list[Edge]
+    next_cursor: str | None
+    checked: int
     fetched_at: str
 
 

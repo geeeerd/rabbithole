@@ -9,6 +9,7 @@ function Harness() {
   return <><output data-testid="edges">{e.graph?.edges.map(edge=>edge.id).join(',')}</output><output data-testid="nodes">{e.graph?.nodes.map(n=>n.id).join(',')}</output><output data-testid="selected">{e.selected?.id}</output>
     <output data-testid="filter">{e.filter}</output><output data-testid="error">{e.error}</output><output data-testid="busy">{String(e.busy)}</output>
     <button onClick={()=>e.explore('Q1')}>Start</button><button onClick={()=>e.loadMore('Q1')}>More</button><button onClick={e.loadLinks}>Cross-links</button><button onClick={()=>e.explore('Q2',true)}>Expand</button>
+    <button onClick={() => e.loadIncoming('Q1')}>Incoming</button>
     <button onClick={()=>e.collapse('Q2')}>Collapse</button><button onClick={()=>e.home()}>Home</button>
     <button onClick={()=>e.setFilter('P361')}>Filter</button><button onClick={e.retry}>Retry</button>
   </>;
@@ -128,4 +129,30 @@ it('checks only visible topics and preserves discovered cross-links when sharing
   history.replaceState(null, '', '/?entity=Q1&links=1');
   render(<Harness/>);
   await waitFor(()=>expect(screen.getByTestId('edges').textContent).toContain('Q2-Q3'));
+});
+
+it('follows incoming cursors and restores a branch reached through an incoming statement', async () => {
+  vi.mocked(fetch).mockImplementation(async (url) => {
+    const request = new URL(String(url), 'http://localhost');
+    const graph = graphs[request.searchParams.get('entity') as keyof typeof graphs];
+    const hasCursor = request.searchParams.get('cursor') === 'next|Q3';
+    const source = fixture(hasCursor ? 'Q5' : 'Q3', ['Q1']);
+    const incoming = { nodes: source.nodes.slice(0, 1), edges: source.edges,
+      checked: 8, next_cursor: hasCursor ? null : 'next|Q3', fetched_at: source.fetched_at };
+    return { ok: true, json: async () => request.pathname.endsWith('/incoming') ? incoming : graph } as Response;
+  });
+  const view = render(<Harness/>);
+  fireEvent.click(screen.getByText('Start'));
+  await waitFor(() => expect(screen.getByTestId('nodes').textContent).toBe('Q1,Q2'));
+  fireEvent.click(screen.getByText('Incoming'));
+  await waitFor(() => expect(screen.getByTestId('edges').textContent).toContain('Q3-Q1'));
+  fireEvent.click(screen.getByText('Incoming'));
+  await waitFor(() => expect(screen.getByTestId('edges').textContent).toContain('Q5-Q1'));
+  expect(new URLSearchParams(location.search).get('incoming')).toBe('Q1:2');
+
+  view.unmount();
+  history.replaceState(null, '', '/?entity=Q1&incoming=Q1:2&expand=Q3&selected=Q4');
+  render(<Harness/>);
+  await waitFor(() => expect(screen.getByTestId('selected').textContent).toBe('Q4'));
+  expect(screen.getByTestId('edges').textContent).toContain('Q5-Q1');
 });

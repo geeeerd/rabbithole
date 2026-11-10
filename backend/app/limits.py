@@ -53,6 +53,8 @@ class ApiLimits:
             cost = 2 if path == "/api/graph" or path.endswith(("/neighbors", "/timeline", "/places", "/background", "/facts")) else 1
             if path == "/api/graph/links":
                 cost = 4
+            elif path.endswith("/incoming"):
+                cost = 5
             retry = bucket.consume(now, cost, self.capacity, self.refill)
             if not retry and upstream:
                 retry = self.upstream.consume(now, cost, 30, 2)

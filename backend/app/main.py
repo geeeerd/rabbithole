@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Query
 from .articles import Article, wikipedia_intro
 from .challenges import router as challenge_router
 from .connections import (
-    GRAPH_LABELS, LINK_EDGE_LIMIT, PAGE_SIZE, LinkRequest, LinkScan,
+    GRAPH_LABELS, ITEM_ID, LINK_EDGE_LIMIT, LINK_SOURCE_LIMIT, PAGE_SIZE, IncomingPage, LinkRequest, LinkScan,
     graph_statements, saved_links, varied_order,
 )
 from .facts import FACT_PAGE_SIZE, LABELS as FACT_LABELS, FactPage, recorded_facts
@@ -179,6 +179,45 @@ async def entity_places(qid: str, offline: bool = False):
     return Places(subject=subject, points=points, offline=saved, missing_count=missing, truncated=truncated)
 
 
+@app.get("/api/entities/{qid}/incoming", response_model=IncomingPage)
+async def incoming_connections(qid: str, cursor: Annotated[str | None, Query(max_length=180)] = None):
+    validate(qid)
+    params = {
+        "action": "query", "list": "backlinks", "bltitle": qid, "blnamespace": 0,
+        "bllimit": LINK_SOURCE_LIMIT, "blfilterredir": "nonredirects",
+    }
+    if cursor:
+        params.update({"blcontinue": cursor, "continue": "-||"})
+    try:
+        index = await request(params)
+    except (httpx.HTTPError, ValueError):
+        raise HTTPException(503, "Wikidata incoming-link discovery is temporarily unavailable.") from None
+
+    # The backlinks index suggests candidates. Only an actual directed statement becomes an edge.
+    backlinks = index["query"].get("backlinks", [])
+    candidates: dict[str, None] = {}
+    for page in backlinks[:LINK_SOURCE_LIMIT] if isinstance(backlinks, list) else []:
+        if not isinstance(page, dict):
+            continue
+        candidate = page.get("title")
+        if isinstance(candidate, str) and candidate != qid and ITEM_ID.fullmatch(candidate):
+            candidates[candidate] = None
+    records, offline = await entities(list(candidates)) if candidates else ({}, False)
+    if offline:
+        raise HTTPException(503, "The incoming statement records could not be verified. Retry shortly.")
+    edges = varied_order([
+        edge for key in candidates if key in records and "missing" not in records[key]
+        for edge in graph_statements(records[key]) if edge.target == qid and edge.source == key
+    ])[:LINK_EDGE_LIMIT]
+    edges = await resolve_property_labels(edges)
+    nodes = [normalize(records[key]) for key in dict.fromkeys(edge.source for edge in edges)]
+    continuation = index.get("continue")
+    next_cursor = continuation.get("blcontinue") if isinstance(continuation, dict) else None
+    return IncomingPage(nodes=nodes, edges=edges, checked=len(candidates),
+                        next_cursor=next_cursor if isinstance(next_cursor, str) and next_cursor != cursor else None,
+                        fetched_at=datetime.now(timezone.utc).isoformat())
+
+
 @app.get("/api/graph", response_model=Graph)
 async def graph(entity: str = "Q7251", offset: Annotated[int, Query(ge=0, le=10000)] = 0):
     validate(entity)
@@ -228,6 +267,18 @@ async def graph(entity: str = "Q7251", offset: Annotated[int, Query(ge=0, le=100
     )
 
 
+async def resolve_property_labels(edges):
+    properties = list(dict.fromkeys(edge.property_id for edge in edges if edge.property_id not in GRAPH_LABELS))
+    if not properties:
+        return edges
+    metadata, _ = await entities(properties, include_claims=False)
+    return [
+        edge.model_copy(update={"label": normalize(metadata[edge.property_id]).label})
+        if edge.property_id in metadata and metadata[edge.property_id].get("labels") else edge
+        for edge in edges
+    ]
+
+
 @app.post("/api/graph/links", response_model=LinkScan)
 async def graph_links(query: LinkRequest):
     visible = set(query.topics)
@@ -244,14 +295,8 @@ async def graph_links(query: LinkRequest):
         if edge.source in visible and edge.target in visible
     ])
     edges = links[:LINK_EDGE_LIMIT]
-    properties = list(dict.fromkeys(edge.property_id for edge in edges if edge.property_id not in GRAPH_LABELS))
-    if properties and not offline:
-        metadata, _ = await entities(properties, include_claims=False)
-        edges = [
-            edge.model_copy(update={"label": normalize(metadata[edge.property_id]).label})
-            if edge.property_id in metadata and metadata[edge.property_id].get("labels") else edge
-            for edge in edges
-        ]
+    if not offline:
+        edges = await resolve_property_labels(edges)
     return LinkScan(
         edges=edges, scanned_ids=scanned,
         saved_edge_ids=[edge.id for edge in edges] if offline else [],

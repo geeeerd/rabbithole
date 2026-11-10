@@ -98,3 +98,22 @@ def test_link_scan_checks_only_requested_visible_sources(monkeypatch):
     assert any(edge['source'] == 'Q924289' and edge['target'] == 'Q35794' for edge in scan['edges'])
     assert all(edge['source'] == 'Q924289' and edge['target'] in topics for edge in scan['edges'])
     assert not scan['offline'] and not scan['saved_edge_ids']
+
+
+def test_incoming_candidates_become_edges_only_after_statement_verification(monkeypatch):
+    async def fixture_request(params):
+        if params['action'] == 'query':
+            assert params['bltitle'] == 'Q35794' and params['bllimit'] == 8
+            if params.get('blcontinue') == '0|20':
+                return {'query': {'backlinks': []}}
+            return {'query': {'backlinks': [{'title': 'Q924289'}, {'title': 'Q2278254'}]},
+                    'continue': {'blcontinue': '0|20'}}
+        return {'entities': main.seed_entities(params['ids'].split('|'))}
+
+    monkeypatch.setattr(main, 'request', fixture_request)
+    page = client.get('/api/entities/Q35794/incoming').json()
+    assert page['checked'] == 2 and page['next_cursor'] == '0|20'
+    assert {node['id'] for node in page['nodes']} == {'Q924289'}
+    assert all(edge['source'] == 'Q924289' and edge['target'] == 'Q35794' for edge in page['edges'])
+    more = client.get('/api/entities/Q35794/incoming', params={'cursor': page['next_cursor']}).json()
+    assert more['next_cursor'] is None and not more['edges']

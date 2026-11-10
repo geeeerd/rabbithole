@@ -1,15 +1,34 @@
 export type Entity = { id: string; label: string; description: string; source_url: string };
 export type Edge = { id: string; source: string; target: string; label: string; property_id: string; references: unknown[]; qualifiers: Record<string, unknown>; source_url: string };
-export type Graph = { nodes: Entity[]; edges: Edge[]; root_id: string; offline: boolean; truncated: boolean; fetched_at: string; next_offset?: number | null; total_statements?: number | null; saved_edge_ids?: string[] };
-export type Trail = { root: string; expanded: string[]; selected: string; filter: string; pages?: Record<string, number>; linkScans?: number };
+export type Graph = { nodes: Entity[]; edges: Edge[]; root_id: string; offline: boolean; truncated: boolean; fetched_at: string; next_offset?: number | null; total_statements?: number | null; saved_edge_ids?: string[]; incoming_cursor?: string | null; incoming_checked?: number };
+export type Trail = { root: string; expanded: string[]; selected: string; filter: string; pages?: Record<string, number>; incoming?: Record<string, number>; linkScans?: number };
+export type IncomingPage = { nodes: Entity[]; edges: Edge[]; fetched_at: string; next_cursor: string | null; checked: number };
 export type LinkScan = { edges: Edge[]; scanned_ids: string[]; saved_edge_ids: string[]; offline: boolean; truncated: boolean; fetched_at: string };
 export type Snapshot = { trail: Trail; bundles: Record<string, Graph>; links?: LinkScan[] };
 export const MAX_NODES = 100;
 export const MAX_BRANCHES = 8;
 export const MAX_EXTRA_PAGES = 6;
 export const MAX_LINK_SCANS = 4;
+export const MAX_INCOMING_PAGES = 4;
 export const LINK_SOURCE_LIMIT = 8;
 const validId = (value: string) => /^Q[1-9][0-9]{0,11}$/.test(value);
+
+export function pageCount(pages: Record<string, number> = {}) {
+  return Object.values(pages).reduce((total, count) => total + count, 0);
+}
+
+function readCounts(value: string | null, topics: string[], limit: number) {
+  const counts: Record<string, number> = {};
+  for (const part of (value || '').split(',').filter(Boolean)) {
+    const [id, count, extra] = part.split(':');
+    if (extra !== undefined || !topics.includes(id) || id in counts || !/^[1-9]$/.test(count)) {
+      throw new Error('This exploration link has invalid connection pages.');
+    }
+    counts[id] = Number(count);
+  }
+  if (pageCount(counts) > limit) throw new Error('This exploration link has too many connection pages.');
+  return Object.keys(counts).length ? counts : undefined;
+}
 
 export function readTrail(search: string): Trail | null {
   const params = new URLSearchParams(search);
@@ -21,24 +40,14 @@ export function readTrail(search: string): Trail | null {
   const selected = params.get('selected') || root;
   const filter = params.get('filter') || 'all';
   if (!validId(selected) || (filter !== 'all' && !/^P[1-9][0-9]*$/.test(filter))) throw new Error('This exploration link has invalid view settings.');
-  const pages: Record<string, number> = {};
-  let pageCount = 0;
-  for (const part of (params.get('pages') || '').split(',').filter(Boolean)) {
-    const [id, count, extra] = part.split(':');
-    if (extra !== undefined || !validId(id) || (id !== root && !expanded.includes(id)) || id in pages || !/^[1-6]$/.test(count)) {
-      throw new Error('This exploration link has invalid connection pages.');
-    }
-    pages[id] = Number(count);
-    pageCount += pages[id];
-  }
-  if (pageCount > MAX_EXTRA_PAGES) throw new Error('This exploration link has too many connection pages.');
+  const pages = readCounts(params.get('pages'), [root, ...expanded], MAX_EXTRA_PAGES);
+  const incoming = readCounts(params.get('incoming'), [root, ...expanded], MAX_INCOMING_PAGES);
   const linkScans = Number(params.get('links') ?? 0);
   if (!Number.isInteger(linkScans) || linkScans < 0 || linkScans > MAX_LINK_SCANS) {
     throw new Error('This exploration link has too many cross-link checks.');
   }
   return { root, expanded: expanded.filter(id => id !== root), selected, filter,
-    ...(pageCount ? { pages } : {}), ...(linkScans ? { linkScans } : {}) };
-
+    ...(pages ? { pages } : {}), ...(incoming ? { incoming } : {}), ...(linkScans ? { linkScans } : {}) };
 }
 
 export function trailUrl(trail: Trail): string {
@@ -46,8 +55,10 @@ export function trailUrl(trail: Trail): string {
   if (trail.expanded.length) params.set('expand', trail.expanded.join(','));
   if (trail.selected !== trail.root) params.set('selected', trail.selected);
   if (trail.filter !== 'all') params.set('filter', trail.filter);
-  const pages = Object.entries(trail.pages ?? {}).map(([id,count]) => `${id}:${count}`);
-  if (pages.length) params.set('pages', pages.join(','));
+  for (const key of ['pages', 'incoming'] as const) {
+    const counts = Object.entries(trail[key] ?? {}).map(([id, count]) => `${id}:${count}`);
+    if (counts.length) params.set(key, counts.join(','));
+  }
   if (trail.linkScans) params.set('links', String(trail.linkScans));
   return '?' + params.toString();
 }
@@ -71,10 +82,14 @@ export function buildSnapshot(trail: Trail, bundles: Record<string, Graph>): Sna
   if (visible.size > MAX_NODES) throw new Error('You reached the 100-topic limit. Collapse a branch or recenter to continue.');
   const expanded = trail.expanded.filter(id => active.has(id) && id !== trail.root);
   const selected = visible.has(trail.selected) ? trail.selected : trail.root;
-  const { pages, linkScans: _linkScans, ...base } = trail;
-  const visiblePages = Object.fromEntries(Object.entries(pages ?? {}).filter(([id]) => active.has(id)));
+  const { pages, incoming, linkScans: _linkScans, ...base } = trail;
+  const visibleCounts = (counts?: Record<string, number>) =>
+    Object.fromEntries(Object.entries(counts ?? {}).filter(([id]) => active.has(id)));
+  const visiblePages = visibleCounts(pages);
+  const visibleIncoming = visibleCounts(incoming);
   return {
-    trail: { ...base, expanded, selected, ...(Object.keys(visiblePages).length ? { pages: visiblePages } : {}) },
+    trail: { ...base, expanded, selected, ...(pageCount(visiblePages) ? { pages: visiblePages } : {}),
+      ...(pageCount(visibleIncoming) ? { incoming: visibleIncoming } : {}) },
     bundles: Object.fromEntries([...active].map(id => [id, bundles[id]])),
   };
 }
@@ -112,6 +127,12 @@ export function mergeGraph(snapshot: Snapshot): Graph {
 }
 
 export function mergePage(current: Graph, page: Graph): Graph {
-  return { ...combine([current, page], current.root_id), next_offset: page.next_offset,
+  return { ...current, ...combine([current, page], current.root_id), next_offset: page.next_offset,
     total_statements: page.total_statements, truncated: page.truncated };
+}
+
+export function mergeIncoming(current: Graph, page: IncomingPage): Graph {
+  const incoming = { ...page, root_id: current.root_id, offline: false, truncated: false };
+  return { ...current, ...combine([current, incoming], current.root_id),
+    incoming_cursor: page.next_cursor, incoming_checked: (current.incoming_checked ?? 0) + page.checked };
 }

@@ -10,7 +10,7 @@ DIRECT = {
     "/api/health": "health", "/api/search": "search", "/api/graph": "graph",
     "/api/graph/links": "cross-links",
 }
-ENTITY_ROUTES = {"neighbors", "timeline", "places", "background", "facts"}
+ENTITY_ROUTES = {"neighbors", "timeline", "places", "background", "facts", "incoming"}
 
 
 def route_group(path: str) -> str:
