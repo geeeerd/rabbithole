@@ -71,3 +71,25 @@ it('saves a trail once, reopens its branches and filter, and removes it from the
   expect(screen.getByRole('status').textContent).toContain('Removed');
   expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Saved Trails' }));
 });
+
+it('searches loaded connections by topic or ID and keeps the results after inspecting evidence', async () => {
+  history.replaceState(null, '', '/?entity=Q7251&expand=Q924289&selected=Q924289');
+  render(<App/>);
+  fireEvent.click(await screen.findByText('Inspect connections (2)'));
+  const search = screen.getByRole('searchbox', { name: 'Search loaded connections' });
+  const direction = screen.getByLabelText("Direction relative to King's College");
+  const incoming = "Alan Turing → part of → King's College";
+  const outgoing = "King's College → part of → University of Cambridge";
+  expect(screen.getByRole('button', { name: outgoing })).toBeTruthy();
+  fireEvent.change(search, { target: { value: 'Túring p361' } });
+  expect(screen.queryByRole('button', { name: outgoing })).toBeNull();
+  fireEvent.change(direction, { target: { value: 'outgoing' } });
+  expect(screen.getByText('No loaded connections match these settings.')).toBeTruthy();
+  fireEvent.change(direction, { target: { value: 'incoming' } });
+  fireEvent.click(screen.getByRole('button', { name: incoming }));
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'part of' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to topic' }));
+  expect(screen.getByRole('searchbox')).toBe(search);
+  expect((search as HTMLInputElement).value).toBe('Túring p361');
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: incoming }));
+});

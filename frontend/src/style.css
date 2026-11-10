@@ -31,3 +31,10 @@
 .saved-trails li a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 .saved-trails small{display:block;margin-top:5px}
 @media(max-width:700px){nav>a[href='/trails']{display:block}}
+.connection-controls{display:grid;gap:10px;margin-top:12px}
+.connection-controls label{display:grid;gap:5px;font-size:12px;color:var(--muted)}
+.connection-controls input,.connection-controls select{width:100%;min-width:0}
+.connection-controls input{padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text)}
+.connection-browser .connection-count{margin:10px 0;font-size:12px}
+.connection-results{list-style:none;margin:0;padding:0}
+.connection-results .edgelist{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
