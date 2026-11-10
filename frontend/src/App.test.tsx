@@ -35,3 +35,39 @@ it('supports a complete keyboard-list exploration including expand, collapse and
  const results=await axe.run(container,{rules:{'color-contrast':{enabled:false}}});
  expect(results.violations.map(v=>v.id)).toEqual([]);
 });
+
+it('saves a trail once, reopens its branches and filter, and removes it from the browser', async () => {
+  history.replaceState(null, '', '/?entity=Q7251&expand=Q924289&selected=Q35794&filter=P361');
+  const explorer = render(<App/>);
+  const save = await screen.findByRole('button', { name: 'Save trail' });
+  fireEvent.click(save);
+  expect(screen.getByText('Trail saved in this browser.')).toBeTruthy();
+  fireEvent.click(save);
+  expect(screen.getByText('This trail is already saved.')).toBeTruthy();
+  explorer.unmount();
+
+  history.replaceState(null, '', '/trails');
+  const saved = render(<App/>);
+  const title = 'Alan Turing → University of Cambridge';
+  const link = screen.getByRole('link', { name: title });
+  const href = link.getAttribute('href');
+  expect(href).toContain('expand=Q924289');
+  expect(href).toContain('selected=Q35794');
+  expect(href).toContain('filter=P361');
+  expect(screen.getByText('3 topics when saved')).toBeTruthy();
+  expect((await axe.run(saved.container, { rules: { 'color-contrast': { enabled: false } } })).violations).toEqual([]);
+  saved.unmount();
+
+  history.replaceState(null, '', href!);
+  const restored = render(<App/>);
+  await screen.findByRole('heading', { name: 'University of Cambridge' });
+  expect((screen.getByLabelText('RELATIONSHIP FILTER') as HTMLSelectElement).value).toBe('P361');
+  restored.unmount();
+
+  history.replaceState(null, '', '/trails');
+  render(<App/>);
+  fireEvent.click(screen.getByRole('button', { name: `Remove ${title}` }));
+  expect(screen.queryByRole('link', { name: title })).toBeNull();
+  expect(screen.getByRole('status').textContent).toContain('Removed');
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Saved Trails' }));
+});

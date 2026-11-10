@@ -37,6 +37,7 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 - Keyboard graph controls, a skip link, accessible connection lists and locally remembered light/dark themes.
 - Graph and secondary routes load on demand; builds enforce an initial JavaScript budget.
 - TimeAtlas at `/timeline` shows recorded dates with original precision, calendar and statement sources. `/map` shows recorded places on a present-day land map with coordinate and relationship evidence.
+- Save up to 30 explorations in the current browser. **Saved Trails** reopens a trail with its selected topic, branches, filter and requested connection pages using current graph data.
 - Discovery Stories at `/stories`: three guided journeys with validated statement sequences, chapter links, public-domain portraits, attribution and links into exploration.
 - Connection Challenge at `/challenge`: three rotating daily puzzles, dated replay links, themed practice pairs, server-validated moves, hints, undo, signed progress recovery, source links and shareable results.
 - Timeouts, bounded upstream concurrency, retries and a bounded one-hour in-memory cache.

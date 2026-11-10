@@ -15,7 +15,7 @@ from .main import app as api
 from .metrics import RequestMetrics
 
 DEFAULT_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline", "/map")
+PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline", "/map", "/trails")
 SECURITY_HEADERS = (
     (b"x-content-type-options", b"nosniff"),
     (b"referrer-policy", b"no-referrer"),

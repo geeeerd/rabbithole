@@ -18,6 +18,7 @@ The original product plan is preserved in `blueprint.md`.
 - [ ] Public beta: hosted deployment, alerting and representative traffic tests. The release checks include a controlled local burst.
 - [x] Denser exploration with broader Wikidata statements, more connection pages, and live checks for incoming statements and links between visible topics.
 - [x] Topic facts, attributed Wikipedia background and route tracing through visible statements.
+- [x] Browser-local Saved Trails with shareable exploration links.
 - [x] TimeAtlas timeline with recorded precision, calendar and statement evidence.
 - [x] TimeAtlas geography with interactive place pins, saved coordinates and linked source statements.
 - [ ] TimeAtlas historical boundary views with dated, attributed geometry.

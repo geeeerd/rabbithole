@@ -43,7 +43,7 @@ def smoke(base: str, wait: int) -> None:
                 raise
             time.sleep(0.25)
 
-    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1", "/map?entity=Q7259&saved=1"):
+    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1", "/map?entity=Q7259&saved=1", "/trails"):
         with get(route) as response:
             page = response.read().decode()
             assert "RabbitHole" in page
