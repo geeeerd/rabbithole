@@ -1,0 +1,22 @@
+name: Source correction
+description: Flag a problem with a statement, date, place, story, or attribution.
+body:
+  - type: input
+    id: topic
+    attributes:
+      label: RabbitHole link or topic ID
+      description: Share the page address or the Wikidata Q identifier.
+    validations:
+      required: true
+  - type: input
+    id: statement
+    attributes:
+      label: Statement ID or source link
+      description: The evidence panel lists the original statement ID and source.
+  - type: textarea
+    id: correction
+    attributes:
+      label: What should be corrected?
+      description: Explain the discrepancy and link any references that support the correction.
+    validations:
+      required: true

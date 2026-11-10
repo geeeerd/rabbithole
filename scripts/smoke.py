@@ -58,6 +58,9 @@ def smoke(base: str, wait: int) -> None:
             assert response.read()
             assert "immutable" in response.headers["Cache-Control"]
 
+    with get("/licenses/THIRD_PARTY_NOTICES.txt") as response:
+        assert b"cytoscape" in response.read()
+
     timeline = api("/api/entities/Q7251/timeline?offline=true")
     assert timeline["offline"] and any(entry["property_id"] == "P569" for entry in timeline["entries"])
 

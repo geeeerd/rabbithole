@@ -34,6 +34,7 @@ def create_production_app(dist: Path, *, limits: bool = True) -> ASGIApp:
     web.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
     web.mount("/images", StaticFiles(directory=dist / "images"), name="images")
     web.mount("/maps", StaticFiles(directory=dist / "maps"), name="maps")
+    web.mount("/licenses", StaticFiles(directory=dist / "licenses"), name="licenses")
 
     async def page() -> FileResponse:
         return FileResponse(index, headers={"Cache-Control": "no-cache"})
