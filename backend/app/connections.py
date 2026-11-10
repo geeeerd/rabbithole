@@ -21,7 +21,7 @@ GRAPH_LABELS = {
     "P36": "capital", "P47": "shares border with", "P138": "named after",
     "P170": "creator", "P136": "genre", "P921": "main subject", "P144": "based on",
     "P155": "follows", "P156": "followed by", "P178": "developer", "P287": "designed by",
-    "P61": "discoverer or inventor", "P366": "has use", "P2579": "studied by",
+    "P61": "discoverer or inventor", "P119": "place of burial", "P366": "has use", "P2579": "studied by",
 }
 
 

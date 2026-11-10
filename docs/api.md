@@ -37,3 +37,5 @@ Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through th
 `GET /api/entities/Q7251/timeline` returns up to 40 recorded dates, their original precision and calendar, uncertainty markers, references counts and source URLs. `?offline=true` selects the bundled records and skips live requests.
 
 `POST /api/graph/links` accepts `topics` (2–100 visible item IDs) and `sources` (1–8 of those IDs). It returns up to 48 directed statements between those topics, with checked source IDs and saved-record provenance. It does not fetch arbitrary linked topics.
+
+`GET /api/entities/Q7251/places` returns the topic’s recorded Earth coordinate when available and up to eight related places with usable coordinates. Each point includes precision, the coordinate statement, related place links and supported date qualifiers. `?offline=true` reads the saved coordinates and relationships without live requests.

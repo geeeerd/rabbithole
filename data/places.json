@@ -1,0 +1,450 @@
+{
+  "source": "https://www.wikidata.org/",
+  "retrieved_on": "2026-11-10",
+  "entities": {
+    "Q122744": {
+      "id": "Q122744",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Maida Vale"
+        },
+        "mul": {
+          "language": "mul",
+          "value": "Maida Vale"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "residential district comprising the northern part of Paddington in west London"
+        }
+      },
+      "claims": {
+        "P625": [
+          {
+            "mainsnak": {
+              "snaktype": "value",
+              "property": "P625",
+              "hash": "b4f97e2b52a3efd539a04a394129cc19b066c848",
+              "datavalue": {
+                "value": {
+                  "latitude": 51.5274,
+                  "longitude": -0.1899,
+                  "altitude": null,
+                  "precision": 0.00027777777777778,
+                  "globe": "http://www.wikidata.org/entity/Q2"
+                },
+                "type": "globecoordinate"
+              },
+              "datatype": "globe-coordinate"
+            },
+            "type": "statement",
+            "id": "q122744$5D641D0E-A65F-4D19-86AD-B2994ACB20E6",
+            "rank": "normal",
+            "references": [
+              {
+                "hash": "fa278ebfc458360e5aed63d5058cca83c46134f1",
+                "snaks": {
+                  "P143": [
+                    {
+                      "snaktype": "value",
+                      "property": "P143",
+                      "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+                      "datavalue": {
+                        "value": {
+                          "entity-type": "item",
+                          "numeric-id": 328,
+                          "id": "Q328"
+                        },
+                        "type": "wikibase-entityid"
+                      },
+                      "datatype": "wikibase-item"
+                    }
+                  ]
+                },
+                "snaks-order": [
+                  "P143"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Q20895942": {
+      "id": "Q20895942",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Warrington Lodge"
+        },
+        "mul": {
+          "language": "mul",
+          "value": "Warrington Lodge"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "former nursing home in London W9, England"
+        }
+      },
+      "claims": {
+        "P625": []
+      }
+    },
+    "Q2011497": {
+      "id": "Q2011497",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Wilmslow"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "town and civil parish in Cheshire East, England"
+        }
+      },
+      "claims": {
+        "P625": [
+          {
+            "mainsnak": {
+              "snaktype": "value",
+              "property": "P625",
+              "hash": "e9f91e64bfd8a4e5080c27cc823e1134068f0f10",
+              "datavalue": {
+                "value": {
+                  "latitude": 53.325,
+                  "longitude": -2.239,
+                  "altitude": null,
+                  "precision": 0.00027777777777778,
+                  "globe": "http://www.wikidata.org/entity/Q2"
+                },
+                "type": "globecoordinate"
+              },
+              "datatype": "globe-coordinate"
+            },
+            "type": "statement",
+            "id": "q2011497$DBA3C375-3D59-4320-A758-A53E3256B70F",
+            "rank": "normal",
+            "references": [
+              {
+                "hash": "fa278ebfc458360e5aed63d5058cca83c46134f1",
+                "snaks": {
+                  "P143": [
+                    {
+                      "snaktype": "value",
+                      "property": "P143",
+                      "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+                      "datavalue": {
+                        "value": {
+                          "entity-type": "item",
+                          "numeric-id": 328,
+                          "id": "Q328"
+                        },
+                        "type": "wikibase-entityid"
+                      },
+                      "datatype": "wikibase-item"
+                    }
+                  ]
+                },
+                "snaks-order": [
+                  "P143"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Q123634": {
+      "id": "Q123634",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Marylebone"
+        },
+        "mul": {
+          "language": "mul",
+          "value": "Marylebone"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "inner-city area of central London"
+        }
+      },
+      "claims": {
+        "P625": [
+          {
+            "mainsnak": {
+              "snaktype": "value",
+              "property": "P625",
+              "hash": "ef8e188a1ee7726896e70c954d43e36dfd8e2d24",
+              "datavalue": {
+                "value": {
+                  "latitude": 51.5177,
+                  "longitude": -0.147,
+                  "altitude": null,
+                  "precision": 0.0001,
+                  "globe": "http://www.wikidata.org/entity/Q2"
+                },
+                "type": "globecoordinate"
+              },
+              "datatype": "globe-coordinate"
+            },
+            "type": "statement",
+            "id": "Q123634$BD4BCB0E-2404-4145-B711-D6C9F5B4FA95",
+            "rank": "normal",
+            "references": [
+              {
+                "hash": "fa278ebfc458360e5aed63d5058cca83c46134f1",
+                "snaks": {
+                  "P143": [
+                    {
+                      "snaktype": "value",
+                      "property": "P143",
+                      "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+                      "datavalue": {
+                        "value": {
+                          "entity-type": "item",
+                          "numeric-id": 328,
+                          "id": "Q328"
+                        },
+                        "type": "wikibase-entityid"
+                      },
+                      "datatype": "wikibase-item"
+                    }
+                  ]
+                },
+                "snaks-order": [
+                  "P143"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Q270": {
+      "id": "Q270",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Warsaw"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "capital and largest city of Poland"
+        }
+      },
+      "claims": {
+        "P625": [
+          {
+            "mainsnak": {
+              "snaktype": "value",
+              "property": "P625",
+              "hash": "fac018a90e722759a258fbac6e5de4d9d32c89a3",
+              "datavalue": {
+                "value": {
+                  "latitude": 52.23,
+                  "longitude": 21.011111111111113,
+                  "altitude": null,
+                  "precision": 0.0002777777777777778,
+                  "globe": "http://www.wikidata.org/entity/Q2"
+                },
+                "type": "globecoordinate"
+              },
+              "datatype": "globe-coordinate"
+            },
+            "type": "statement",
+            "id": "q270$6130CCDE-9329-4C75-9569-FE5668EBAA3E",
+            "rank": "normal",
+            "references": [
+              {
+                "hash": "fa278ebfc458360e5aed63d5058cca83c46134f1",
+                "snaks": {
+                  "P143": [
+                    {
+                      "snaktype": "value",
+                      "property": "P143",
+                      "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+                      "datavalue": {
+                        "value": {
+                          "entity-type": "item",
+                          "numeric-id": 328,
+                          "id": "Q328"
+                        },
+                        "type": "wikibase-entityid"
+                      },
+                      "datatype": "wikibase-item"
+                    }
+                  ]
+                },
+                "snaks-order": [
+                  "P143"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Q2364887": {
+      "id": "Q2364887",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Sancellemoz"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "sanatorium in the town of Passy, in Haute-Savoie, eastern France"
+        }
+      },
+      "claims": {
+        "P625": [
+          {
+            "mainsnak": {
+              "snaktype": "value",
+              "property": "P625",
+              "hash": "69feed6b71264ec6f782502cdfde288f762e0648",
+              "datavalue": {
+                "value": {
+                  "latitude": 45.93922382106103,
+                  "longitude": 6.7152300614722416,
+                  "altitude": null,
+                  "precision": 1e-08,
+                  "globe": "http://www.wikidata.org/entity/Q2"
+                },
+                "type": "globecoordinate"
+              },
+              "datatype": "globe-coordinate"
+            },
+            "type": "statement",
+            "id": "Q2364887$2125fea3-4f1f-6e8d-fb08-a93740b4e690",
+            "rank": "normal"
+          }
+        ]
+      }
+    },
+    "Q350": {
+      "id": "Q350",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Cambridge"
+        },
+        "mul": {
+          "language": "mul",
+          "value": "Cambridge"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "city in Cambridgeshire, England"
+        }
+      },
+      "claims": {
+        "P625": [
+          {
+            "mainsnak": {
+              "snaktype": "value",
+              "property": "P625",
+              "hash": "597d67c5eb639b88f13dd7b1943ede1c5ef60605",
+              "datavalue": {
+                "value": {
+                  "latitude": 52.208055555556,
+                  "longitude": 0.1225,
+                  "altitude": null,
+                  "precision": 0.00027777777777778,
+                  "globe": "http://www.wikidata.org/entity/Q2"
+                },
+                "type": "globecoordinate"
+              },
+              "datatype": "globe-coordinate"
+            },
+            "type": "statement",
+            "id": "q350$00C2D0A4-7412-4C05-A2FA-0F5ECBBF7BA5",
+            "rank": "normal",
+            "references": [
+              {
+                "hash": "288ab581e7d2d02995a26dfa8b091d96e78457fc",
+                "snaks": {
+                  "P143": [
+                    {
+                      "snaktype": "value",
+                      "property": "P143",
+                      "hash": "6a164248fc96bfa583bbb495cb63ae6401ec203c",
+                      "datavalue": {
+                        "value": {
+                          "entity-type": "item",
+                          "numeric-id": 206855,
+                          "id": "Q206855"
+                        },
+                        "type": "wikibase-entityid"
+                      },
+                      "datatype": "wikibase-item"
+                    }
+                  ]
+                },
+                "snaks-order": [
+                  "P143"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Q145": {
+      "id": "Q145",
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "United Kingdom"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "island country in north-west Europe"
+        }
+      },
+      "claims": {
+        "P625": [
+          {
+            "mainsnak": {
+              "snaktype": "value",
+              "property": "P625",
+              "hash": "64983906818c22bb278ac5911a381593e683f0c5",
+              "datavalue": {
+                "value": {
+                  "latitude": 54.6,
+                  "longitude": -2,
+                  "altitude": null,
+                  "precision": 0.1,
+                  "globe": "http://www.wikidata.org/entity/Q2"
+                },
+                "type": "globecoordinate"
+              },
+              "datatype": "globe-coordinate"
+            },
+            "type": "statement",
+            "id": "q145$b5d9c174-45ce-8807-5146-21a2ece72fc1",
+            "rank": "normal"
+          }
+        ]
+      }
+    }
+  }
+}

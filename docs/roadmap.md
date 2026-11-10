@@ -17,6 +17,7 @@ The original product plan is preserved in `blueprint.md`.
 - [ ] Public beta: hosted deployment, monitoring, load tests, contribution templates and license audit.
 - [x] Denser exploration with broader Wikidata statements, more connection pages, saved incoming links and saved links between visible topics, and live cross-link checks.
 - [x] TimeAtlas timeline with recorded precision, calendar and statement evidence.
-- [ ] TimeAtlas geography and historical boundary views.
+- [x] TimeAtlas geography with interactive place pins, saved coordinates and linked source statements.
+- [ ] TimeAtlas historical boundary views with dated, attributed geometry.
 
 Do not call these phases complete until every acceptance criterion in the blueprint has been tested. No fabricated or unverified curated paths should ship as factual graph edges.

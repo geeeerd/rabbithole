@@ -11,6 +11,7 @@ from .connections import (
     GRAPH_LABELS, LINK_EDGE_LIMIT, PAGE_SIZE, LinkRequest, LinkScan,
     graph_statements, saved_links, varied_order,
 )
+from .geography import Place, Places, coordinate, place_links, relationship_dates, saved_places
 from .knowledge import SEEDS, Entity, Graph, extract, normalize, validate
 from .stories import router as story_router
 from .timeline import Timeline, events
@@ -90,6 +91,46 @@ async def entity_timeline(qid: str, offline: bool = False):
         if entry.related_id in targets and "missing" not in targets[entry.related_id]:
             entry.related_label = normalize(targets[entry.related_id]).label
     return Timeline(subject=normalize(data[qid]), entries=entries, offline=saved, truncated=truncated)
+
+
+@app.get("/api/entities/{qid}/places", response_model=Places)
+async def entity_places(qid: str, offline: bool = False):
+    validate(qid)
+    if offline:
+        records, saved = seed_entities([qid]), True
+    else:
+        records, saved = await entities([qid])
+    if saved and qid in saved_places():
+        records.setdefault(qid, saved_places()[qid])
+    item = records.get(qid)
+    if not item or "missing" in item:
+        status = 404 if offline or not saved else 503
+        raise HTTPException(status, "No place record is available for this topic in the selected source.")
+
+    related, truncated = place_links(item)
+    targets = {key: saved_places()[key] for key in related if key in saved_places()}
+    targets.update(seed_entities(related))
+    if related and not saved:
+        live, fallback = await entities(list(related))
+        targets.update({key: record for key, record in live.items() if "missing" not in record})
+        saved = saved or fallback
+
+    subject = normalize(item)
+    points = []
+    own = coordinate(item)
+    if own:
+        points.append(Place(entity=subject, coordinate=own, relationships=[]))
+    missing = 0
+    for key, relationships in related.items():
+        target = targets.get(key)
+        location = coordinate(target) if target else None
+        if location:
+            selected_links = relationships[:6]
+            points.append(Place(entity=normalize(target), coordinate=location, relationships=selected_links,
+                                relationship_dates=relationship_dates(selected_links)))
+        else:
+            missing += 1
+    return Places(subject=subject, points=points, offline=saved, missing_count=missing, truncated=truncated)
 
 
 @app.get("/api/graph", response_model=Graph)

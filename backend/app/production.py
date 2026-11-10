@@ -13,7 +13,7 @@ from .limits import ApiLimits
 from .main import app as api
 
 DEFAULT_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline")
+PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline", "/map")
 SECURITY_HEADERS = (
     (b"x-content-type-options", b"nosniff"),
     (b"referrer-policy", b"no-referrer"),
@@ -33,6 +33,7 @@ def create_production_app(dist: Path, *, limits: bool = True) -> ASGIApp:
     web = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     web.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
     web.mount("/images", StaticFiles(directory=dist / "images"), name="images")
+    web.mount("/maps", StaticFiles(directory=dist / "maps"), name="maps")
 
     async def page() -> FileResponse:
         return FileResponse(index, headers={"Cache-Control": "no-cache"})

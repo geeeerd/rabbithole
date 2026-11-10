@@ -43,7 +43,7 @@ def smoke(base: str, wait: int) -> None:
                 raise
             time.sleep(0.25)
 
-    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1"):
+    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1", "/map?entity=Q7259&saved=1"):
         with get(route) as response:
             page = response.read().decode()
             assert "RabbitHole" in page
@@ -60,6 +60,12 @@ def smoke(base: str, wait: int) -> None:
 
     timeline = api("/api/entities/Q7251/timeline?offline=true")
     assert timeline["offline"] and any(entry["property_id"] == "P569" for entry in timeline["entries"])
+
+    places = api("/api/entities/Q7259/places?offline=true")
+    assert places["offline"] and any(place["entity"]["id"] == "Q84" for place in places["points"])
+    with get("/maps/land.svg") as response:
+        assert response.headers.get_content_type() == "image/svg+xml"
+        assert b"Natural Earth" in response.read()
 
     stories = api("/api/stories")
     assert len(stories) >= 3

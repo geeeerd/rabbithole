@@ -8,10 +8,11 @@ from app.production import create_production_app
 def test_built_pages_and_api_are_served_without_route_fallbacks(tmp_path):
     (tmp_path / "assets").mkdir()
     (tmp_path / "images").mkdir()
+    (tmp_path / "maps").mkdir()
     (tmp_path / "index.html").write_text("<html><title>RabbitHole</title></html>")
     (tmp_path / "assets" / "main-hash.js").write_text("export {};")
     with TestClient(create_production_app(tmp_path)) as client:
-        for path in ("/", "/stories?story=curie-and-paris&step=1", "/challenge", "/timeline?entity=Q7251"):
+        for path in ("/", "/stories?story=curie-and-paris&step=1", "/challenge", "/timeline?entity=Q7251", "/map?entity=Q7251"):
             page = client.get(path)
             assert page.status_code == 200
             assert "RabbitHole" in page.text

@@ -99,7 +99,7 @@ export function Timeline() {
           <h2>{data.subject.label}</h2>
           <p>{data.subject.description}</p>
         </div>
-        <a href={'/?entity=' + data.subject.id}>Open connection graph <ArrowUpRight size={16}/></a>
+        <div className="map-related"><a href={'/?entity=' + data.subject.id}>Open connection graph <ArrowUpRight size={16}/></a><a href={'/map?entity=' + data.subject.id}>See places on a map <ArrowUpRight size={16}/></a></div>
       </div>
       {data.entries.length > 0 && <label className="timeline-filter">Show dates<select value={filter} onChange={event => setFilter(event.target.value)}>
         <option value="all">All recorded dates</option><option value="direct">Topic dates</option><option value="related">Relationship dates</option>
