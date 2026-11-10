@@ -50,7 +50,7 @@ class ApiLimits:
             self.clients[address] = bucket
             if len(self.clients) > self.max_clients:
                 self.clients.popitem(last=False)
-            cost = 2 if path == "/api/graph" or path.endswith(("/neighbors", "/timeline", "/places")) else 1
+            cost = 2 if path == "/api/graph" or path.endswith(("/neighbors", "/timeline", "/places", "/background")) else 1
             if path == "/api/graph/links":
                 cost = 4
             retry = bucket.consume(now, cost, self.capacity, self.refill)

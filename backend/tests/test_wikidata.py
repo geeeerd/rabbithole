@@ -19,7 +19,7 @@ def test_concurrent_identical_requests_share_one_upstream_fetch(monkeypatch):
     monkeypatch.setattr(wikidata.httpx, "AsyncClient", lambda **kwargs: client_class(transport=httpx.MockTransport(handle), **kwargs))
 
     async def run():
-        client = wikidata.WikidataClient()
+        client = wikidata.WikimediaClient()
         query = {"action": "wbsearchentities", "search": "Turing"}
         assert await asyncio.gather(*(client.request(query) for _ in range(10))) == [{"search": []}] * 10
         assert await client.request(query) == {"search": []}
@@ -41,7 +41,7 @@ def test_throttling_prevents_retries_and_new_upstream_requests(monkeypatch):
     monkeypatch.setattr(wikidata.httpx, "AsyncClient", lambda **kwargs: client_class(transport=httpx.MockTransport(handle), **kwargs))
 
     async def run():
-        client = wikidata.WikidataClient()
+        client = wikidata.WikimediaClient()
         with pytest.raises(httpx.HTTPStatusError):
             await client.request({"action": "wbsearchentities", "search": "Turing"})
         with pytest.raises(ValueError, match="retry later"):
@@ -60,7 +60,7 @@ def test_slow_upstream_has_a_total_deadline(monkeypatch):
     monkeypatch.setattr(wikidata, "REQUEST_DEADLINE", 0.01)
 
     async def run():
-        client = wikidata.WikidataClient()
+        client = wikidata.WikimediaClient()
         with pytest.raises(ValueError, match="timed out"):
             await client.request({"action": "wbsearchentities", "search": "Turing"})
         assert not client.pending

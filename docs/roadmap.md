@@ -14,7 +14,7 @@ The original product plan is preserved in `blueprint.md`.
 - [x] Discovery Stories: three curated narratives, startup-validated statement sequences, chapter navigation/deep links, public-domain portraits, attribution and story-to-graph handoff.
 - [ ] Expand stories: broader subject coverage, further independent source review and a contribution/review workflow.
 - [x] Release build: same-origin container, API and upstream limits, GitHub Actions build and smoke test.
-- [ ] Public beta: hosted deployment, monitoring, load tests, contribution templates and license audit.
+- [ ] Public beta: hosted deployment, monitoring, representative traffic tests and license audit. The release checks include a controlled local burst.
 - [x] Denser exploration with broader Wikidata statements, more connection pages, saved incoming links and saved links between visible topics, and live cross-link checks.
 - [x] TimeAtlas timeline with recorded precision, calendar and statement evidence.
 - [x] TimeAtlas geography with interactive place pins, saved coordinates and linked source statements.

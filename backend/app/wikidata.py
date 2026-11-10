@@ -1,4 +1,4 @@
-"""Bounded access to Wikidata with short deadlines and shared rate-limit cooldowns."""
+"""Bounded access to Wikimedia APIs with short deadlines and shared rate-limit cooldowns."""
 
 import asyncio
 from collections import OrderedDict
@@ -17,10 +17,12 @@ CACHE_ENTRIES = 64
 CACHE_ITEM_BYTES = 128 * 1024
 CACHE_TTL = 3600
 REQUEST_DEADLINE = 7
+RESPONSE_TYPES = {"wbsearchentities": ("search", list), "wbgetentities": ("entities", dict), "query": ("query", dict)}
 
 
-class WikidataClient:
-    def __init__(self):
+class WikimediaClient:
+    def __init__(self, endpoint: str = ENDPOINT):
+        self.endpoint = endpoint
         self.cache: OrderedDict[str, tuple[float, bytes]] = OrderedDict()
         self.pending: dict[str, asyncio.Task] = {}
         self.concurrency = asyncio.Semaphore(3)
@@ -56,8 +58,7 @@ class WikidataClient:
                 async with httpx.AsyncClient(timeout=4, headers=headers) as client:
                     response = await self.fetch_response(client, params)
                 data = response.json()
-                expected = "search" if params["action"] == "wbsearchentities" else "entities"
-                expected_type = list if expected == "search" else dict
+                expected, expected_type = RESPONSE_TYPES[params["action"]]
                 if not isinstance(data, dict) or not isinstance(data.get(expected), expected_type):
                     error = data.get("error") if isinstance(data, dict) else None
                     if isinstance(error, dict) and error.get("code") == "maxlag":
@@ -78,7 +79,7 @@ class WikidataClient:
             if time.monotonic() < self.cooldown_until:
                 raise ValueError("Wikidata has asked clients to retry later")
             try:
-                response = await client.get(ENDPOINT, params=query)
+                response = await client.get(self.endpoint, params=query)
             except httpx.TransportError:
                 if attempt:
                     raise

@@ -6,6 +6,7 @@ from typing import Annotated
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 
+from .articles import Article, wikipedia_intro
 from .challenges import router as challenge_router
 from .connections import (
     GRAPH_LABELS, LINK_EDGE_LIMIT, PAGE_SIZE, LinkRequest, LinkScan,
@@ -15,10 +16,10 @@ from .geography import Place, Places, coordinate, place_links, relationship_date
 from .knowledge import SEEDS, Entity, Graph, extract, normalize, validate
 from .stories import router as story_router
 from .timeline import Timeline, events
-from .wikidata import WikidataClient
+from .wikidata import WikimediaClient
 
 app = FastAPI(title="RabbitHole API", version="0.1.0")
-wikidata = WikidataClient()
+wikidata = WikimediaClient()
 request = wikidata.request
 
 
@@ -68,6 +69,23 @@ async def entity(qid: str):
     if qid not in data or "missing" in data[qid]:
         raise HTTPException(503 if offline else 404, "Entity unavailable. Try again shortly.")
     return normalize(data[qid])
+
+@app.get("/api/entities/{qid}/background", response_model=Article)
+async def background(qid: str):
+    validate(qid)
+    try:
+        data = await request({"action": "wbgetentities", "ids": qid, "props": "sitelinks", "sitefilter": "enwiki"})
+        item = data["entities"].get(qid, {})
+        title = item.get("sitelinks", {}).get("enwiki", {}).get("title")
+        if not isinstance(title, str) or not title:
+            raise HTTPException(404, "This topic has no linked English Wikipedia article.")
+        article = await wikipedia_intro(title)
+    except (httpx.HTTPError, ValueError):
+        raise HTTPException(503, "Wikipedia background is temporarily unavailable. Try again shortly.") from None
+    if article is None:
+        raise HTTPException(404, "There is no readable article introduction for this topic.")
+    return article
+
 
 @app.get("/api/entities/{qid}/neighbors", response_model=Graph)
 async def neighbors(qid: str, offset: Annotated[int, Query(ge=0, le=10000)] = 0):

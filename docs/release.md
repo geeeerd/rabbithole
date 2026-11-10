@@ -11,7 +11,7 @@ docker build -t rabbithole:local .
 docker run --rm -p 127.0.0.1:8000:8000 rabbithole:local
 ```
 
-Open `http://127.0.0.1:8000`. In a second terminal, run `python3 scripts/smoke.py`. The smoke test checks bookmarked pages, built assets, the story catalog and portrait files, a complete challenge, and missing routes. It makes no live Wikidata requests.
+Open `http://127.0.0.1:8000`. In a second terminal, run `python3 scripts/smoke.py`. The smoke test checks bookmarked pages, built assets, the story catalog and portrait files, a complete challenge, and missing routes. It makes no live Wikidata requests. On a fresh local instance, `python3 scripts/load_check.py` checks concurrent page delivery and confirms that a burst against the saved timeline returns controlled 429 responses while health stays available. It reports local HTTP timing.
 
 ## Run the same release without Docker
 

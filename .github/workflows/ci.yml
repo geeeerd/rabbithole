@@ -36,5 +36,6 @@ jobs:
       - run: docker build --tag rabbithole:ci .
       - run: docker run --detach --name rabbithole-ci --publish 127.0.0.1:8000:8000 rabbithole:ci
       - run: python3 scripts/smoke.py --wait 30
+      - run: python3 scripts/load_check.py
       - if: failure()
         run: docker logs rabbithole-ci || true
