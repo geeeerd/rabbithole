@@ -14,11 +14,11 @@ Interactive contracts: `/docs`. No user accounts; game writes validate signed, e
 
 All routes below have typed request/response contracts in `/docs`. Challenges use the bundled snapshot and make no live Wikimedia calls.
 
-- `GET /api/challenges/daily`: starts the starter daily puzzle. UTC date is included; the starter route repeats daily until more reviewed puzzles are added.
-- `GET /api/challenges/collection`: eligible practice entities, graph version and relationship model.
-- `POST /api/challenges/custom`: `{ "start": "Q7251", "destination": "Q35794" }`. Rejects unknown, identical or unreachable pairs.
+- `GET /api/challenges/daily` starts the puzzle for today in UTC. Pass `?day=YYYY-MM-DD` to replay a date.
+- `GET /api/challenges/collection?category=classic` returns eligible practice entities, a suggested pair, the available collection list, the graph version and the relationship model.
+- `POST /api/challenges/custom` accepts `{ "start": "Q7251", "destination": "Q35794", "category": "classic" }`. It rejects unknown, identical or unreachable pairs. Omitting `category` selects `classic`.
 - `POST /api/challenges/validate-move`: `{ "token": "...", "edge_id": "..." }`. Requires an actual outgoing statement from the signed current position.
-- `POST /api/challenges/hint`: `{ "token": "..." }`. Returns a suggested eligible edge from bounded breadth-first search and signs the hint count. Repeating a hint at the same position counts once.
+- `POST /api/challenges/hint`: `{ "token": "..." }`. Returns a suggested eligible edge from bounded breadth-first search and signs the hint count. Repeating a hint at the same topic counts once.
 - `POST /api/challenges/undo`: `{ "token": "..." }`. Removes one move, preserving hint count.
 - `POST /api/challenges/verify-path`: `{ "token": "..." }`. Rechecks signed progress and every directed edge; reports completion only at the destination.
 

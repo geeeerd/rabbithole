@@ -11,8 +11,9 @@ const complete:Game = {...initial,token:'signed-win',current:destination,path:[e
 let mockApi:ReturnType<typeof vi.fn>;
 beforeEach(()=>{
  sessionStorage.clear();
+ history.replaceState(null, '', '/challenge');
  mockApi=vi.fn(async (url:string,options?:RequestInit)=>{
-   const endpoint=url.split('/').pop();
+   const endpoint=url.split('?')[0].split('/').pop();
    const body=options?.body?JSON.parse(String(options.body)):null;
    const data=endpoint==='collection'?{entities:[start,destination]}:endpoint==='validate-move'?complete:endpoint==='hint'?{...initial,token:'signed-hint',hints_used:1,hint_edge_id:edge.id}:endpoint==='verify-path'&&body?.token==='signed-win'?complete:initial;
    return {ok:true,json:async()=>data};
@@ -64,5 +65,17 @@ it('checks practice pairs with the server and shows invalid-route errors',async(
  mockApi.mockResolvedValueOnce({ok:false,json:async()=>({detail:'No eligible route exists'})});
  fireEvent.click(screen.getByRole('button',{name:/Start practice/}));
  await screen.findByText('No eligible route exists');
- expect(mockApi).toHaveBeenLastCalledWith('/api/challenges/custom',expect.objectContaining({body:JSON.stringify({start:'Q7251',destination:'Q35794'})}));
+ expect(mockApi).toHaveBeenLastCalledWith('/api/challenges/custom',expect.objectContaining({body:JSON.stringify({start:'Q7251',destination:'Q35794',category:'classic'})}));
+});
+
+it('opens a dated replay and restarts the same UTC puzzle', async () => {
+ history.replaceState(null, '', '/challenge?day=2026-11-11');
+ const replay = {...initial, daily_date:'2026-11-11'};
+ mockApi.mockImplementation(async (url:string) => ({ok:true,json:async()=>url.endsWith('collection')?{entities:[start,destination]}:replay}));
+ render(<Challenge onExplore={()=>{}}/>);
+ await screen.findByText(/2026-11-11 UTC/);
+ expect(mockApi).toHaveBeenCalledWith('/api/challenges/daily?day=2026-11-11',expect.anything());
+ expect(sessionStorage.getItem('rabbithole-challenge-v1:2026-11-11')).toBe(replay.token);
+ fireEvent.click(screen.getByRole('button',{name:'Restart'}));
+ await waitFor(()=>expect(mockApi.mock.calls.filter(([url])=>url.endsWith('day=2026-11-11'))).toHaveLength(2));
 });

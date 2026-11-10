@@ -9,7 +9,8 @@ The original product plan is preserved in `blueprint.md`.
 - [x] Explorer usability: accessible search, graph keyboard controls, renderer lifecycle tests, page-level axe checks and deferred graph/route bundles with a build-size budget.
 - [ ] Complete discovery MVP: real-browser contrast/screen-reader/mobile audit, device performance profiling and hosted deployment.
 - [x] First Connection Challenge: versioned directed snapshot, typed APIs, signed move/path validation, hints, undo, progress recovery, result sharing and custom practice pairs.
-- [ ] Expand challenges: additional reviewed daily puzzles, category modes, larger cached collections and production anti-abuse controls. The starter daily puzzle repeats; practice is limited to the bundled graph.
+- [x] Challenge rotation: three reviewed routes, date-based replay links and themed practice collections with versioned graphs.
+- [ ] Expand challenge coverage with additional reviewed routes and broader topic collections.
 - [x] Discovery Stories: three curated narratives, startup-validated statement sequences, chapter navigation/deep links, public-domain portraits, attribution and story-to-graph handoff.
 - [ ] Expand stories: broader subject coverage, further independent source review and a contribution/review workflow.
 - [x] Release build: same-origin container, API and upstream limits, GitHub Actions build and smoke test.

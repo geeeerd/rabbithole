@@ -1,0 +1,42 @@
+{
+  "starts_on": "2026-11-10",
+  "collections": [
+    {
+      "id": "computing",
+      "label": "Early computing",
+      "entities": ["Q7259", "Q46633", "Q332342", "Q35794", "Q395", "Q21198"],
+      "properties": ["P737", "P69", "P361", "P101"],
+      "snapshot_date": "2026-11-06"
+    },
+    {
+      "id": "science",
+      "label": "Science and institutions",
+      "entities": ["Q7186", "Q2451973", "Q90", "Q11448", "Q142"],
+      "properties": ["P108", "P159", "P101", "P17"],
+      "snapshot_date": "2026-11-06"
+    }
+  ],
+  "puzzles": [
+    {
+      "id": "turing-to-cambridge-v1",
+      "collection": "classic",
+      "start": "Q7251",
+      "destination": "Q35794",
+      "story": "turing-to-cambridge"
+    },
+    {
+      "id": "ada-to-cambridge-v1",
+      "collection": "computing",
+      "start": "Q7259",
+      "destination": "Q35794",
+      "story": "ada-and-babbage"
+    },
+    {
+      "id": "curie-to-paris-v1",
+      "collection": "science",
+      "start": "Q7186",
+      "destination": "Q90",
+      "story": "curie-and-paris"
+    }
+  ]
+}
