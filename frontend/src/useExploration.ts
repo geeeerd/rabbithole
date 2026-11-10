@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { buildSnapshot, MAX_BRANCHES, mergeGraph, readTrail, trailUrl } from './exploration';
+import { buildSnapshot, MAX_BRANCHES, MAX_EXTRA_PAGES, mergeGraph, mergePage, readTrail, trailUrl } from './exploration';
 import type { Entity, Graph, Snapshot } from './exploration';
 
-async function fetchGraph(id: string, signal: AbortSignal): Promise<Graph> {
-  const response = await fetch('/api/graph?entity=' + encodeURIComponent(id), { signal });
+async function fetchGraph(id: string, signal: AbortSignal, offset?: number): Promise<Graph> {
+  const params = new URLSearchParams({ entity: id });
+  if (offset !== undefined) params.set('offset', String(offset));
+  const response = await fetch('/api/graph?' + params, { signal });
   if (!response.ok) throw new Error((await response.json()).detail || 'Could not load this topic. Please retry.');
   return response.json();
 }
@@ -51,18 +53,28 @@ export function useExploration(enabled = true) {
     void run(async signal => {
       const trail = readTrail(location.search);
       if (!trail) return null;
-      const bundles: Record<string, Graph> = { [trail.root]: await fetchGraph(trail.root, signal) };
-      // Fetch only connected branches; never issue arbitrary disconnected traversals.
-      const remaining = new Set(trail.expanded);
-      while (remaining.size) {
-        const visible = new Set(Object.values(bundles).flatMap(g => g.nodes.map(n => n.id)));
-        const id = [...remaining].find(id => visible.has(id));
-        if (!id) throw new Error('This exploration link contains a disconnected branch.');
-        bundles[id] = await fetchGraph(id, signal);
-        remaining.delete(id);
-        buildSnapshot({ ...trail, expanded: Object.keys(bundles).filter(key => key !== trail.root) }, bundles);
+      const bundles: Record<string, Graph> = {};
+    const pages: Record<string, number> = {};
+    const load = async (id: string) => {
+      let bundle = await fetchGraph(id, signal);
+      const count = trail.pages?.[id] ?? 0;
+      for (let index = 0; index < count && bundle.next_offset != null; index++) {
+        bundle = mergePage(bundle, await fetchGraph(id, signal, bundle.next_offset));
+        pages[id] = index + 1;
       }
-      return buildSnapshot(trail, bundles);
+      bundles[id] = bundle;
+    };
+    await load(trail.root);
+    const remaining = new Set(trail.expanded);
+    while (remaining.size) {
+      const visible = new Set(Object.values(bundles).flatMap(g => g.nodes.map(n => n.id)));
+      const id = [...remaining].find(id => visible.has(id));
+      if (!id) throw new Error('This exploration link contains a disconnected branch.');
+      await load(id);
+      remaining.delete(id);
+      buildSnapshot({ ...trail, expanded: Object.keys(bundles).filter(key => key !== trail.root), pages }, bundles);
+    }
+    return buildSnapshot({ ...trail, pages }, bundles);
     }, false, restoreUrl);
   }
 
@@ -108,6 +120,21 @@ export function useExploration(enabled = true) {
     }, true, action);
   }
 
+  function loadMore(id: string) {
+    const previous = current.current;
+    const bundle = previous?.bundles[id];
+    const offset = bundle?.next_offset;
+    if (!previous || !bundle || offset == null) return;
+    const pages = previous.trail.pages ?? {};
+    const count = Object.values(pages).reduce((total, amount) => total + amount, 0);
+    void run(async signal => {
+      if (count >= MAX_EXTRA_PAGES) throw new Error('This trail has reached its page limit. Recenter a topic or collapse a branch to continue.');
+      const next = await fetchGraph(id, signal, offset);
+      return buildSnapshot({ ...previous.trail, pages: { ...pages, [id]: (pages[id] ?? 0) + 1 } },
+        { ...previous.bundles, [id]: mergePage(bundle, next) });
+    }, true, () => loadMore(id));
+  }
+
   function updateView(selected: string, filter: string) {
     if (!current.current) return;
     const next = { ...current.current, trail: { ...current.current.trail, selected, filter } };
@@ -124,7 +151,7 @@ export function useExploration(enabled = true) {
   }
   const graph = useMemo(() => snapshot ? mergeGraph(snapshot) : null, [snapshot?.bundles]);
   const selected: Entity | null = graph?.nodes.find(n => n.id === snapshot?.trail.selected) || null;
-  return { graph, selected, snapshot, busy, error, setError, retry: () => retryAction?.(), explore, home, collapse,
+  return { graph, selected, snapshot, busy, error, setError, retry: () => retryAction?.(), explore, loadMore, home, collapse,
     filter: snapshot?.trail.filter || 'all',
     setSelected: (entity: Entity | null) => { if (entity && snapshot) updateView(entity.id, snapshot.trail.filter); },
     setFilter: (filter: string) => { if (snapshot) updateView(snapshot.trail.selected, filter); },

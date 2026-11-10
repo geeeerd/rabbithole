@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-const dist=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../frontend/dist');
+const dist=process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../frontend/dist');
 const manifest=JSON.parse(fs.readFileSync(path.join(dist,'.vite/manifest.json'),'utf8'));
 const seen=new Set();
 function walk(key){if(seen.has(key))return;seen.add(key);for(const item of manifest[key].imports||[])walk(item)}

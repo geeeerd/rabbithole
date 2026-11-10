@@ -13,7 +13,7 @@ from .limits import ApiLimits
 from .main import app as api
 
 DEFAULT_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-PAGE_ROUTES = ("/", "/stories", "/challenge")
+PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline")
 SECURITY_HEADERS = (
     (b"x-content-type-options", b"nosniff"),
     (b"referrer-policy", b"no-referrer"),

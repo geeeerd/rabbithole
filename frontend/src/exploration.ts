@@ -1,10 +1,11 @@
 export type Entity = { id: string; label: string; description: string; source_url: string };
 export type Edge = { id: string; source: string; target: string; label: string; property_id: string; references: unknown[]; qualifiers: Record<string, unknown>; source_url: string };
-export type Graph = { nodes: Entity[]; edges: Edge[]; root_id: string; offline: boolean; truncated: boolean; fetched_at: string };
-export type Trail = { root: string; expanded: string[]; selected: string; filter: string };
+export type Graph = { nodes: Entity[]; edges: Edge[]; root_id: string; offline: boolean; truncated: boolean; fetched_at: string; next_offset?: number | null; total_statements?: number | null; saved_edge_ids?: string[] };
+export type Trail = { root: string; expanded: string[]; selected: string; filter: string; pages?: Record<string, number> };
 export type Snapshot = { trail: Trail; bundles: Record<string, Graph> };
-export const MAX_NODES = 60;
+export const MAX_NODES = 100;
 export const MAX_BRANCHES = 8;
+export const MAX_EXTRA_PAGES = 6;
 const validId = (value: string) => /^Q[1-9][0-9]{0,11}$/.test(value);
 
 export function readTrail(search: string): Trail | null {
@@ -17,7 +18,20 @@ export function readTrail(search: string): Trail | null {
   const selected = params.get('selected') || root;
   const filter = params.get('filter') || 'all';
   if (!validId(selected) || (filter !== 'all' && !/^P[1-9][0-9]*$/.test(filter))) throw new Error('This exploration link has invalid view settings.');
-  return { root, expanded: expanded.filter(id => id !== root), selected, filter };
+  const pages: Record<string, number> = {};
+  let pageCount = 0;
+  for (const part of (params.get('pages') || '').split(',').filter(Boolean)) {
+    const [id, count, extra] = part.split(':');
+    if (extra !== undefined || !validId(id) || (id !== root && !expanded.includes(id)) || id in pages || !/^[1-6]$/.test(count)) {
+      throw new Error('This exploration link has invalid connection pages.');
+    }
+    pages[id] = Number(count);
+    pageCount += pages[id];
+  }
+  if (pageCount > MAX_EXTRA_PAGES) throw new Error('This exploration link has too many connection pages.');
+  return { root, expanded: expanded.filter(id => id !== root), selected, filter,
+    ...(pageCount ? { pages } : {}) };
+
 }
 
 export function trailUrl(trail: Trail): string {
@@ -25,6 +39,8 @@ export function trailUrl(trail: Trail): string {
   if (trail.expanded.length) params.set('expand', trail.expanded.join(','));
   if (trail.selected !== trail.root) params.set('selected', trail.selected);
   if (trail.filter !== 'all') params.set('filter', trail.filter);
+  const pages = Object.entries(trail.pages ?? {}).map(([id,count]) => `${id}:${count}`);
+  if (pages.length) params.set('pages', pages.join(','));
   return '?' + params.toString();
 }
 
@@ -44,19 +60,46 @@ export function buildSnapshot(trail: Trail, bundles: Record<string, Graph>): Sna
       }
     }
   }
-  if (visible.size > MAX_NODES) throw new Error('You reached the 60-topic limit. Collapse a branch or recenter to continue.');
+  if (visible.size > MAX_NODES) throw new Error('You reached the 100-topic limit. Collapse a branch or recenter to continue.');
   const expanded = trail.expanded.filter(id => active.has(id) && id !== trail.root);
   const selected = visible.has(trail.selected) ? trail.selected : trail.root;
-  return { trail: { ...trail, expanded, selected }, bundles: Object.fromEntries([...active].map(id => [id, bundles[id]])) };
+  const { pages, ...base } = trail;
+  const visiblePages = Object.fromEntries(Object.entries(pages ?? {}).filter(([id]) => active.has(id)));
+  return {
+    trail: { ...base, expanded, selected, ...(Object.keys(visiblePages).length ? { pages: visiblePages } : {}) },
+    bundles: Object.fromEntries([...active].map(id => [id, bundles[id]])),
+  };
+}
+
+function combine(graphs: Graph[], root: string): Graph {
+  const nodes = new Map<string, Entity>();
+  const edges = new Map<string, { edge: Edge; saved: boolean }>();
+  for (const graph of graphs) {
+    const savedIds = new Set(graph.saved_edge_ids ?? []);
+    for (const node of graph.nodes) {
+      if (!nodes.has(node.id) || node.label !== node.id) nodes.set(node.id, node);
+    }
+    for (const edge of graph.edges) {
+      const saved = savedIds.has(edge.id);
+      if (!edges.has(edge.id) || !saved || edges.get(edge.id)?.saved) edges.set(edge.id, { edge, saved });
+    }
+  }
+  return {
+    root_id: root,
+    nodes: [...nodes.values()],
+    edges: [...edges.values()].map(({ edge }) => edge),
+    saved_edge_ids: [...edges.values()].filter(({ saved }) => saved).map(({ edge }) => edge.id),
+    offline: graphs.every(g => g.offline),
+    truncated: graphs.some(g => g.truncated),
+    fetched_at: graphs.map(g => g.fetched_at).sort()[0],
+  };
 }
 
 export function mergeGraph(snapshot: Snapshot): Graph {
-  const graphs = Object.values(snapshot.bundles);
-  return {
-    root_id: snapshot.trail.root,
-    nodes: [...new Map(graphs.flatMap(g => g.nodes).map(n => [n.id, n])).values()],
-    edges: [...new Map(graphs.flatMap(g => g.edges).map(e => [e.id, e])).values()],
-    offline: graphs.some(g => g.offline), truncated: graphs.some(g => g.truncated),
-    fetched_at: graphs.map(g => g.fetched_at).sort()[0],
-  };
+  return combine(Object.values(snapshot.bundles), snapshot.trail.root);
+}
+
+export function mergePage(current: Graph, page: Graph): Graph {
+  return { ...combine([current, page], current.root_id), next_offset: page.next_offset,
+    total_statements: page.total_statements, truncated: page.truncated };
 }

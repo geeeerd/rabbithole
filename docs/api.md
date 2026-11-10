@@ -6,7 +6,7 @@
 
 `GET /api/entities/{QID}` — normalized entity, or 404 (missing live item), 503 (unavailable offline), 422 (invalid ID).
 
-`GET /api/entities/{QID}/neighbors` and `GET /api/graph?entity=Q7251` — normalized graph, original statement IDs, references, qualifiers, source links, truncation/offline flags and response timestamp. At most 12 allowed relationships.
+`GET /api/entities/{QID}/neighbors` and `GET /api/graph?entity=Q7251` — normalized graph, original statement IDs, references, qualifiers, source links, truncation/offline flags and response timestamp. See connection pages below for pagination and saved links.
 
 Interactive contracts: `/docs`. No user accounts; game writes validate signed, expiring progress tokens.
 
@@ -29,3 +29,9 @@ Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through th
 ## Discovery Stories
 
 `GET /api/stories` returns published summaries with category, topic count, image attribution and review timestamp. `GET /api/stories/{id}` returns an ordered entity sequence, editorial text, transitions with exact source statements, additional source links and full media metadata. Unknown IDs return 404. Startup validation rejects missing or reversed transitions. These endpoints use bundled data and do not need external API access.
+
+## Connection pages and timelines
+
+`GET /api/graph?entity=Q7251&offset=0` and the entity neighbors endpoint return up to 24 root statements per page, plus saved cross-links among visible topics. Pass the returned `next_offset` to load another page. A null offset indicates the end of the available pages. `total_statements` counts root statements before metadata resolution. `saved_edge_ids` marks statements obtained from bundled records. Source and target IDs always follow the original direction.
+
+`GET /api/entities/Q7251/timeline` returns up to 40 recorded dates, their original precision and calendar, uncertainty markers, references counts and source URLs. `?offline=true` selects the bundled records and skips live requests.

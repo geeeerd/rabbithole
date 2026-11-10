@@ -29,13 +29,14 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 ## Working now
 
 - Debounced Wikidata search with keyboard autocomplete, announcements, no-results states and retry.
-- Directed, labeled graph with zoom, pan, progressive expansion, branch collapse, reset and recentering.
+- Directed graph with broader Wikidata relationships, saved cross-links, zoom, pan, expansion, branch collapse and recentering. **More connections** adds another page for the selected topic.
 - Branch chips and Back/Forward controls with graph snapshots for offline history navigation.
 - Entity profiles, property filters and accessible topic/connection lists.
 - Statement inspection including references, qualifiers and original source links.
-- Shareable exploration URLs preserving the root, up to eight expanded branches, selected topic and relationship filter.
+- Shareable exploration URLs preserving the root, up to eight expanded branches, connection pages, the selected topic and the relationship filter.
 - Keyboard graph controls, a skip link, accessible connection lists and locally remembered light/dark themes.
 - Graph and secondary routes load on demand; builds enforce an initial JavaScript budget.
+- TimeAtlas at `/timeline` shows recorded dates with original precision, calendar and statement sources.
 - Discovery Stories at `/stories`: three guided journeys with validated statement sequences, chapter links, public-domain portraits, attribution and links into exploration.
 - Connection Challenge at `/challenge`: three rotating daily puzzles, dated replay links, themed practice pairs, server-validated moves, hints, undo, signed progress recovery, source links and shareable results.
 - Timeouts, bounded upstream concurrency, retries and a bounded one-hour in-memory cache.
@@ -58,7 +59,7 @@ CI runs the tests and builds a release container with a smoke test. Both package
 
 ## Scope and limitations
 
-This is the first vertical slice, not the full public beta. Additional reviewed challenges and stories, Wikipedia summaries, persistent storage, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live API is an outbound neighborhood only, capped at 12 statements; the frontend caps the graph at 60 nodes and eight expanded branches. Search and fallback support English. The offline collection covers a small Turing neighborhood and may not support further expansions.
+This is the first vertical slice, not the full public beta. Additional reviewed challenges and stories, Wikipedia summaries, persistent storage, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live graph pages through item-valued outgoing statements and supplements them with incoming and cross-links from the bundled collection. A trail supports up to 100 topics, eight expanded branches and six additional pages. Search and fallback support English. The offline collection covers a small group of bundled topics.
 
 The daily rotation follows three reviewed routes from the Discovery Stories catalog. Dated links replay the same puzzle. Each practice collection has its own bundled topics and directed relationship types. Signed progress expires after 24 hours. Set `CHALLENGE_SIGNING_KEY` in the backend environment for progress to survive server restarts; without it, a temporary process key is used. There is no leaderboard or claim of a globally shortest route.
 

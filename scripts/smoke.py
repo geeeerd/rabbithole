@@ -43,7 +43,7 @@ def smoke(base: str, wait: int) -> None:
                 raise
             time.sleep(0.25)
 
-    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge"):
+    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1"):
         with get(route) as response:
             page = response.read().decode()
             assert "RabbitHole" in page
@@ -57,6 +57,9 @@ def smoke(base: str, wait: int) -> None:
         with get(path) as response:
             assert response.read()
             assert "immutable" in response.headers["Cache-Control"]
+
+    timeline = api("/api/entities/Q7251/timeline?offline=true")
+    assert timeline["offline"] and any(entry["property_id"] == "P569" for entry in timeline["entries"])
 
     stories = api("/api/stories")
     assert len(stories) >= 3

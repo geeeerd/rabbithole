@@ -31,7 +31,7 @@ describe('exploration state', () => {
   });
   it('enforces the visible-node cap without mutating the original graph', () => {
     const original = fixture('Q1',['Q2']);
-    expect(()=>buildSnapshot({...trail,expanded:['Q2']},{Q1:original,Q2:fixture('Q2',Array.from({length:60},(_,i)=>'Q'+(i+3)))})).toThrow('60-topic');
+    expect(()=>buildSnapshot({...trail,expanded:['Q2']},{Q1:original,Q2:fixture('Q2',Array.from({length:100},(_,i)=>'Q'+(i+3)))})).toThrow('100-topic');
     expect(original.nodes).toHaveLength(2);
   });
 });

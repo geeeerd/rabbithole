@@ -2,7 +2,7 @@
 
 React/TypeScript → Vite `/api` proxy → FastAPI → bounded HTTPX requests → Wikimedia Action API.
 
-The graph renderer uses stable Q identifiers for nodes and statement IDs for edges. Data is normalized server-side. Property allowlisting excludes generic instance-of edges. Direction, references and qualifiers are preserved. The client merges by ID and limits visible nodes to 60. Responses return at most 12 relationships. No reverse relationships are invented.
+The graph renderer uses stable Q identifiers for nodes and statement IDs for edges. Data is normalized server-side. Graph pages preserve direction, references and qualifiers for item-valued statements. The client merges by ID and limits visible nodes to 100. Incoming saved links retain the original direction.
 
 Upstream responses are cached for an hour in a bounded process-local cache. On upstream failure, checked-in entity snapshots provide a small offline neighborhood. Cache and persistent storage are separate concerns: no database is needed yet. PostgreSQL migrations should be introduced when curated stories and challenges require durable records.
 
@@ -10,7 +10,7 @@ Search requests are cancelled when the query changes. Exploration responses use 
 
 ## Exploration continuity
 
-`frontend/src/exploration.ts` owns the typed trail model and URL codec. A trail has a root, up to eight expanded topics, selection and relationship filter. Each expanded topic owns a neighborhood bundle. Collapsing a branch rebuilds reachability from the root, preserving shared nodes and removing unreachable descendant expansions; cycles terminate through visited sets. Node and edge maps deduplicate stable IDs. The 60-node limit applies to the union before any state is committed.
+`frontend/src/exploration.ts` owns the typed trail model and URL codec. A trail has a root, up to eight expanded topics, selection and relationship filter. Each expanded topic owns a neighborhood bundle. Collapsing a branch rebuilds reachability from the root, preserving shared nodes and removing unreachable descendant expansions; cycles terminate through visited sets. Node and edge maps deduplicate stable IDs. The 100-node limit applies to the union before any state is committed. A shared trail can restore up to six extra pages as well as expanded branches.
 
 `useExploration.ts` manages atomic loading, request cancellation and browser history snapshots. Branch updates push history entries; selection and filtering replace the current view. Back/Forward restore saved data without API calls. Fresh shared links fetch connected neighborhoods sequentially, respecting limits and failing visibly if a branch is no longer reconstructible. A failed expansion keeps the previous graph and retries the same operation. Going home aborts pending loads. Share links preserve exploration choices, not a permanent copy of Wikidata statements or graph positions.
 
@@ -31,3 +31,11 @@ Public-domain portraits are served locally with attribution rather than fetched 
 ## Frontend loading and accessibility
 
 The application shell (`App.tsx`) owns routing and explorer composition. SearchBox owns an ARIA combobox with cancellable requests and keyboard selection. Cytoscape is isolated in a lazy GraphCanvas module; graph, story and challenge modules are not initial-page dependencies. Renderer instances persist across profile selection, and callbacks read current props. The graph keyboard handler and native topic lists share the same selection operation. A graph-specific error boundary preserves the lists if its module fails. Bundle-manifest checks enforce the initial-JavaScript budget. See `accessibility.md` for the scope and limits of validation.
+
+## Broader connection pages
+
+The explorer uses all nondeprecated item-valued statements from a root. The first page prioritizes a mix of relationship types, then subsequent pages continue through the same order. Up to 24 root statements are loaded per page. Incoming links and connections between visible topics can also come from the bundled Wikidata records. These edges keep the source item, direction and statement ID, and are marked as saved in the evidence panel. Live property labels are resolved in the same bounded request as topic labels when available. Challenge and story rules continue to use their reviewed statement sets.
+
+## Timeline
+
+TimeAtlas extracts recorded dates and relationship qualifiers from a single item, preserving Gregorian or Julian calendar labels, BCE years and century-to-day precision. It flags sourcing qualifiers and uncertainty fields without interpreting them as exact historical dates. Direct topic dates are retained before relationship dates when the 40-entry cap applies. A saved-record mode can run without upstream access. See the [Wikidata date model](https://www.wikidata.org/wiki/Help:Dates).

@@ -46,8 +46,15 @@ def test_live_contract_with_mocked_upstream(monkeypatch):
     assert client.get('/api/search?q=Turing').json()['offline'] is False
     graph = client.get('/api/graph?entity=Q7251').json()
     assert graph['offline'] is False
-    assert len(graph['edges']) <= 12
-    assert graph['truncated'] is True
+    assert len([edge for edge in graph['edges'] if 'Q7251' in (edge['source'], edge['target'])]) == 24
+    assert len({edge['property_id'] for edge in graph['edges']}) > 8
+    assert graph['next_offset'] == 24 and graph['truncated'] is True
+    more = client.get('/api/graph?entity=Q7251&offset=24').json()
+    first_page = {edge['id'] for edge in graph['edges'] if 'Q7251' in (edge['source'], edge['target'])}
+    next_page = {edge['id'] for edge in more['edges'] if 'Q7251' in (edge['source'], edge['target'])}
+    assert next_page and not first_page.intersection(next_page)
+    assert graph['total_statements'] > len(first_page)
+    assert client.get('/api/graph?entity=Q7251&offset=-1').status_code == 422
     assert client.get('/api/entities/Q7251').json()['label'] == 'Alan Turing'
     assert client.get('/api/entities/Q999999999999').status_code == 404
 
