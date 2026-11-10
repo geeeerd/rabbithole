@@ -74,3 +74,4 @@ The release includes a same-origin site and API with request limits. Host config
 Code: MIT. Structured entity snapshots: Wikidata CC0, not independently verified research. Statements without references are explicitly labeled. On-demand Wikipedia excerpts are credited separately under CC BY-SA 4.0. Three public-domain Commons portraits are bundled with file-specific attribution in `frontend/public/images/ATTRIBUTION.md`. See [data sources](docs/data-sources.md).
 
 See [the original blueprint](docs/blueprint.md), [architecture](docs/architecture.md), [roadmap](docs/roadmap.md) and [contribution guide](CONTRIBUTING.md).
+- **Explore by category** on the homepage offers 24 Wikidata starting topics across eight subject areas.

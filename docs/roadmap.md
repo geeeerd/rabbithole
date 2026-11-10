@@ -7,6 +7,7 @@ The original product plan is preserved in `blueprint.md`.
 - [x] First graph: Cytoscape, pan/zoom, expansion, ID deduplication, recentering, profiles and statement inspection.
 - [x] Exploration continuity: branch collapse with shared-neighbor preservation, Back/Forward snapshots, URL serialization of expanded topics and view settings, and frontend interaction tests.
 - [x] Explorer usability: accessible search, graph keyboard controls, renderer lifecycle tests, page-level axe checks and deferred graph/route bundles with a build-size budget.
+- [x] Homepage browsing with 24 Wikidata starting points across the eight blueprint categories.
 - [ ] Complete discovery MVP: real-browser contrast/screen-reader/mobile audit, device performance profiling and hosted deployment.
 - [x] First Connection Challenge: versioned directed snapshot, typed APIs, signed move/path validation, hints, undo, progress recovery, result sharing and custom practice pairs.
 - [x] Challenge rotation: three reviewed routes, date-based replay links and themed practice collections with versioned graphs.

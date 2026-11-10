@@ -1,5 +1,5 @@
 import React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import axe from 'axe-core';
 import App from './App';
@@ -112,4 +112,20 @@ it('compares direct statements and shared neighbors using the graph relationship
   expect(evidence.getAttribute('href')).toBe('https://www.wikidata.org/wiki/Q924289#P361');
   fireEvent.change(screen.getByLabelText('RELATIONSHIP FILTER'), { target: { value: 'P69' } });
   expect(screen.getByText('0 direct connections · 0 shared neighbors')).toBeTruthy();
+});
+
+it('browses a category and opens the selected starting topic in the explorer', async () => {
+  const coral = fixture('Q11292', []);
+  coral.nodes[0].label = 'Coral reef';
+  vi.mocked(fetch).mockImplementation(async () => ({ ok: true, json: async () => coral }) as Response);
+  render(<App/>);
+  const browse = screen.getByRole('region', { name: 'Explore by category' });
+  expect(within(browse).getByRole('link', { name: 'Cleopatra' }).getAttribute('href')).toBe('/?entity=Q635');
+  const nature = within(browse).getByRole('button', { name: 'Nature' });
+  fireEvent.click(nature);
+  expect(nature.getAttribute('aria-pressed')).toBe('true');
+  expect(within(browse).queryByRole('link', { name: 'Cleopatra' })).toBeNull();
+  fireEvent.click(within(browse).getByRole('link', { name: 'Coral reef' }));
+  await screen.findByRole('heading', { name: 'Coral reef' });
+  expect(location.search).toBe('?entity=Q11292');
 });
