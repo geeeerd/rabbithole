@@ -3,12 +3,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import GraphCanvas from './GraphCanvas';
 import { fixture } from './testFixtures';
-const mocks=vi.hoisted(()=>({handlers:{} as Record<string,(event:{target:{id:()=>string}})=>void>,c:{on:vi.fn(),style:vi.fn(),batch:vi.fn(),elements:vi.fn(),add:vi.fn(),layout:vi.fn(),nodes:vi.fn(),$id:vi.fn(),animate:vi.fn(),center:vi.fn(),fit:vi.fn(),resize:vi.fn(),destroy:vi.fn(),zoom:vi.fn()}}));
+const mocks=vi.hoisted(()=>({handlers:{} as Record<string,(event:{target:{id:()=>string}})=>void>,c:{on:vi.fn(),style:vi.fn(),batch:vi.fn(),elements:vi.fn(),edges:vi.fn(),add:vi.fn(),layout:vi.fn(),nodes:vi.fn(),$id:vi.fn(),animate:vi.fn(),center:vi.fn(),fit:vi.fn(),resize:vi.fn(),destroy:vi.fn(),zoom:vi.fn()}}));
 vi.mock('cytoscape',()=>({default:vi.fn(()=>mocks.c)}));
 beforeEach(()=>{
  vi.clearAllMocks();mocks.handlers={};
  mocks.c.on.mockImplementation((_event,selector,handler)=>{mocks.handlers[selector]=handler});
- mocks.c.batch.mockImplementation(fn=>fn());mocks.c.elements.mockReturnValue({remove:vi.fn()});mocks.c.layout.mockReturnValue({run:vi.fn()});mocks.c.nodes.mockReturnValue({unselect:vi.fn()});mocks.c.$id.mockReturnValue({select:vi.fn()});mocks.c.zoom.mockReturnValue(1);
+ mocks.c.batch.mockImplementation(fn=>fn());mocks.c.elements.mockReturnValue({remove:vi.fn()});mocks.c.edges.mockReturnValue({removeClass:vi.fn()});mocks.c.layout.mockReturnValue({run:vi.fn()});mocks.c.nodes.mockReturnValue({unselect:vi.fn()});mocks.c.$id.mockReturnValue({select:vi.fn()});mocks.c.zoom.mockReturnValue(1);
  vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});vi.stubGlobal('matchMedia',vi.fn(()=>({matches:true})));
 });
 afterEach(()=>{cleanup();vi.unstubAllGlobals()});

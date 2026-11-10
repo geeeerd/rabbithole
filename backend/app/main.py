@@ -12,6 +12,7 @@ from .connections import (
     GRAPH_LABELS, LINK_EDGE_LIMIT, PAGE_SIZE, LinkRequest, LinkScan,
     graph_statements, saved_links, varied_order,
 )
+from .facts import FACT_PAGE_SIZE, LABELS as FACT_LABELS, FactPage, recorded_facts
 from .geography import Place, Places, coordinate, place_links, relationship_dates, saved_places
 from .knowledge import SEEDS, Entity, Graph, extract, normalize, validate
 from .stories import router as story_router
@@ -109,6 +110,33 @@ async def entity_timeline(qid: str, offline: bool = False):
         if entry.related_id in targets and "missing" not in targets[entry.related_id]:
             entry.related_label = normalize(targets[entry.related_id]).label
     return Timeline(subject=normalize(data[qid]), entries=entries, offline=saved, truncated=truncated)
+
+
+@app.get("/api/entities/{qid}/facts", response_model=FactPage)
+async def entity_facts(qid: str, offset: Annotated[int, Query(ge=0, le=10000)] = 0):
+    validate(qid)
+    records, offline = await entities([qid])
+    item = records.get(qid)
+    if not item or "missing" in item:
+        raise HTTPException(503 if offline else 404, "No fact record is available for this topic.")
+    facts = recorded_facts(item)
+    page = facts[offset:offset + FACT_PAGE_SIZE]
+    identifiers = list(dict.fromkeys(
+        key for fact in page for key in (fact.property_id if fact.property_id not in FACT_LABELS else None, fact.unit_id)
+        if key is not None
+    ))
+    if identifiers and not offline:
+        metadata, _ = await entities(identifiers, include_claims=False)
+        for fact in page:
+            prop = metadata.get(fact.property_id)
+            unit = metadata.get(fact.unit_id)
+            if prop and prop.get("labels"):
+                fact.label = normalize(prop).label
+            if unit and unit.get("labels"):
+                fact.unit_label = normalize(unit).label
+    next_offset = offset + FACT_PAGE_SIZE
+    return FactPage(facts=page, next_offset=next_offset if next_offset < min(len(facts), 10000) else None,
+                    total=len(facts), offline=offline)
 
 
 @app.get("/api/entities/{qid}/places", response_model=Places)

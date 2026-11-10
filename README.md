@@ -29,9 +29,9 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 ## Working now
 
 - Debounced Wikidata search with keyboard autocomplete, announcements, no-results states and retry.
-- Directed graph with broader Wikidata relationships, saved cross-links, zoom, pan, expansion, branch collapse and recentering. **More connections** adds another page for the selected topic. **Find cross-links** looks for additional statements between visible topics.
+- Directed graph with broader Wikidata relationships, saved cross-links, zoom, pan, expansion, branch collapse and recentering. **More connections** adds another page for the selected topic. **Find cross-links** looks for additional statements between visible topics. Trace a route through the current graph from the topic profile.
 - Branch chips and Back/Forward controls with graph snapshots for offline history navigation.
-- Entity profiles, on-demand Wikipedia background with attribution, property filters and accessible topic/connection lists.
+- Entity profiles with recorded facts, on-demand Wikipedia background, property filters and accessible topic/connection lists.
 - Statement inspection including references, qualifiers and original source links.
 - Shareable exploration URLs preserving the root, up to eight expanded branches, connection pages, the selected topic and the relationship filter.
 - Keyboard graph controls, a skip link, accessible connection lists and locally remembered light/dark themes.

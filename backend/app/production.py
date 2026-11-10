@@ -1,6 +1,7 @@
 """Serve the built web application and API on the same origin."""
 
 import os
+from time import perf_counter
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -11,6 +12,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from .limits import ApiLimits
 from .main import app as api
+from .metrics import RequestMetrics
 
 DEFAULT_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline", "/map")
@@ -43,13 +45,17 @@ def create_production_app(dist: Path, *, limits: bool = True) -> ASGIApp:
         web.add_api_route(route, page, methods=["GET", "HEAD"], include_in_schema=False)
 
     protected_api = ApiLimits(api) if limits else api
+    metrics = RequestMetrics()
 
     async def dispatch(scope: Scope, receive: Receive, send: Send) -> None:
         path = scope.get("path", "")
         is_api = path.startswith("/api/")
+        status = None
 
         async def send_headers(message):
+            nonlocal status
             if message["type"] == "http.response.start":
+                status = message["status"]
                 headers = message.setdefault("headers", [])
                 headers.extend(SECURITY_HEADERS)
                 if is_api:
@@ -60,8 +66,15 @@ def create_production_app(dist: Path, *, limits: bool = True) -> ASGIApp:
 
         if scope["type"] == "lifespan":
             await api(scope, receive, send)
+        elif is_api and scope["type"] == "http":
+            started = perf_counter()
+            try:
+                await protected_api(scope, receive, send_headers)
+            finally:
+                if status is not None:
+                    metrics.record(path, status, (perf_counter() - started) * 1000)
         else:
-            await (protected_api if is_api else web)(scope, receive, send_headers)
+            await web(scope, receive, send_headers)
 
     return GZipMiddleware(dispatch, minimum_size=1024)
 

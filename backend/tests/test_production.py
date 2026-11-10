@@ -44,3 +44,15 @@ def test_limit_enforces_body_size_and_replays_valid_game_requests():
         response = client.post("/api/challenges/verify-path", json={"token": game["token"]})
         assert response.status_code == 200
         assert response.json()["current"]["id"] == game["current"]["id"]
+
+
+def test_request_summary_reports_aggregates_without_recording_raw_paths(caplog):
+    from app.metrics import RequestMetrics
+
+    metrics = RequestMetrics(interval=0)
+    with caplog.at_level('INFO', logger='uvicorn.error'):
+        metrics.record('/api/entities/Q7251/background', 429, 3.2)
+        metrics.record('/api/unrecognized/private-input', 500, 12.5)
+    assert '"background"' in caplog.text and '"limited": 1' in caplog.text
+    assert '"server_errors": 1' in caplog.text
+    assert 'Q7251' not in caplog.text and 'private-input' not in caplog.text
