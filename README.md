@@ -54,15 +54,15 @@ npm test
 npm run build
 ```
 
-CI runs the same checks. Both package managers have committed lockfiles.
+CI runs the tests and builds a release container with a smoke test. Both package managers have committed lockfiles. [Build and verify the release](docs/release.md).
 
 ## Scope and limitations
 
-This is the first vertical slice, not the full public beta. Additional reviewed challenges and stories, Wikipedia summaries, persistent storage, production rate limiting, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live API is an outbound neighborhood only, capped at 12 statements; the frontend caps the graph at 60 nodes and eight expanded branches. Search and fallback support English. The offline collection covers a small Turing neighborhood and may not support further expansions.
+This is the first vertical slice, not the full public beta. Additional reviewed challenges and stories, Wikipedia summaries, persistent storage, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection; they are not immutable historical snapshots. The live API is an outbound neighborhood only, capped at 12 statements; the frontend caps the graph at 60 nodes and eight expanded branches. Search and fallback support English. The offline collection covers a small Turing neighborhood and may not support further expansions.
 
 The starter daily challenge repeats the same reviewed two-step route; practice pairs are limited to the bundled graph, not arbitrary Wikidata topics. Challenges use only directed “educated at” and “part of” statements. Signed progress expires after 24 hours. Set `CHALLENGE_SIGNING_KEY` in the backend environment for progress to survive server restarts; without it, a temporary process key is used. There is no leaderboard or claim of a globally shortest route.
 
-The backend is for local development. Before public deployment, configure an identifying Wikimedia User-Agent with contact information, request rate limiting, monitoring, a deployment proxy and persistent caching as needed. Cached data timestamps currently indicate response assembly time; the seed manifest records snapshot time. In-memory caches reset on process restart.
+The release includes a same-origin site and API with request limits. Host configuration and verification are described in the [release guide](docs/release.md). Cached data timestamps indicate response assembly time. The seed manifest records snapshot time. In-memory caches reset on process restart.
 
 ## Data and license
 

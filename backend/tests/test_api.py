@@ -63,11 +63,11 @@ def test_cache_prevents_duplicate_upstream_calls(monkeypatch):
             return httpx.Response(200, json={'search': []}, request=httpx.Request('GET',url))
     import httpx
     monkeypatch.setattr(main.httpx, 'AsyncClient', FakeClient)
-    main.cache.clear()
+    main.wikidata.cache.clear()
     async def run():
         params = {'action':'wbsearchentities','search':'cache-test'}
         assert await main.request(params) == {'search': []}
         assert await main.request(params) == {'search': []}
     asyncio.run(run())
     assert len(calls) == 1
-    main.cache.clear()
+    main.wikidata.cache.clear()

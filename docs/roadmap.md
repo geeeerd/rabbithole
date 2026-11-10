@@ -7,12 +7,13 @@ The original product plan is preserved in `blueprint.md`.
 - [x] First graph: Cytoscape, pan/zoom, expansion, ID deduplication, recentering, profiles and statement inspection.
 - [x] Exploration continuity: branch collapse with shared-neighbor preservation, Back/Forward snapshots, URL serialization of expanded topics and view settings, and frontend interaction tests.
 - [x] Explorer usability: accessible search, graph keyboard controls, renderer lifecycle tests, page-level axe checks and deferred graph/route bundles with a build-size budget.
-- [ ] Complete discovery MVP: real-browser contrast/screen-reader/mobile audit, device performance profiling and reproducible beta deployment.
+- [ ] Complete discovery MVP: real-browser contrast/screen-reader/mobile audit, device performance profiling and hosted deployment.
 - [x] First Connection Challenge: versioned directed snapshot, typed APIs, signed move/path validation, hints, undo, progress recovery, result sharing and custom practice pairs.
 - [ ] Expand challenges: additional reviewed daily puzzles, category modes, larger cached collections and production anti-abuse controls. The starter daily puzzle repeats; practice is limited to the bundled graph.
 - [x] Discovery Stories: three curated narratives, startup-validated statement sequences, chapter navigation/deep links, public-domain portraits, attribution and story-to-graph handoff.
 - [ ] Expand stories: broader subject coverage, further independent source review and a contribution/review workflow.
-- [ ] Public beta: deployment, monitoring, request limits, load tests, contribution templates and license audit.
+- [x] Release build: same-origin container, API and upstream limits, GitHub Actions build and smoke test.
+- [ ] Public beta: hosted deployment, monitoring, load tests, contribution templates and license audit.
 - [ ] TimeAtlas: timelines, geography and historical uncertainty.
 
 Do not call these phases complete until every acceptance criterion in the blueprint has been tested. No fabricated or unverified curated paths should ship as factual graph edges.

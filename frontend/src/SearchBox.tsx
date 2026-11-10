@@ -21,14 +21,20 @@ export function SearchBox({ onSelect, placeholder = 'Start with anything…', la
     const timer = setTimeout(async () => {
       try {
         const response = await fetch('/api/search?q=' + encodeURIComponent(query.trim()), { signal: controller.signal });
-        if (!response.ok) throw new Error('Search unavailable');
+        if (!response.ok) {
+          if (response.status === 429) throw new Error('Search is busy. Wait a moment, then retry.');
+          throw new Error('Search is temporarily unavailable. Retry or choose a featured topic.');
+        }
         const data = await response.json();
         if (controller.signal.aborted) return;
         setResults(data.results); setOpen(document.activeElement === input.current);
         setStatus(data.results.length ? `${data.results.length} topics found.${data.offline ? ' Searching the offline collection.' : ''} Use arrow keys to choose.` : 'No topics found. Try another name.');
       } catch (e) {
         if (controller.signal.aborted) return;
-        setStatus('Search is temporarily unavailable. Retry or choose a featured topic.'); setFailed(true);
+        setStatus(e instanceof Error && e.message.startsWith('Search is')
+          ? e.message
+          : 'Search is temporarily unavailable. Retry or choose a featured topic.');
+        setFailed(true);
       }
     }, 300);
     return () => { clearTimeout(timer); controller.abort(); };
