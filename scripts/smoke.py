@@ -80,12 +80,13 @@ def smoke(base: str, wait: int) -> None:
             assert response.read(2) == b"\xff\xd8"
 
     game = api("/api/challenges/daily")
+    assert game["shortest_steps"] is None
     for _ in range(game["max_steps"]):
         if game["complete"]:
             break
         game = api("/api/challenges/hint", {"token": game["token"]})
         game = api("/api/challenges/validate-move", {"token": game["token"], "edge_id": game["hint_edge_id"]})
-    assert game["complete"]
+    assert game["complete"] and game["shortest_steps"] == game["steps"]
     assert api("/api/challenges/verify-path", {"token": game["token"]})["complete"]
 
     for path in ("/api/missing", "/assets/missing.js", "/missing-page"):

@@ -92,3 +92,14 @@ def test_new_collections_preserve_classic_progress_and_constrain_practice_pairs(
     assert client.post('/api/challenges/custom', json={'category':'science','start':'Q7251','destination':'Q90'}).status_code == 422
     game = client.post('/api/challenges/custom', json={'category':'science','start':'Q7186','destination':'Q90'}).json()
     assert game['collection'] == 'science'
+
+
+def test_completed_route_reports_the_snapshot_minimum_without_revealing_it_midgame():
+    game = client.get('/api/challenges/daily?day=2026-11-11').json()
+    for destination in ('Q46633', 'Q7259', 'Q46633', 'Q332342', 'Q35794'):
+        assert game['shortest_steps'] is None
+        choice = next(choice for choice in game['choices'] if choice['entity']['id'] == destination)
+        game = post('validate-move', game, edge_id=choice['edge']['id']).json()
+    assert game['complete'] and game['steps'] == 5 and game['shortest_steps'] == 3
+    assert post('verify-path', game).json()['shortest_steps'] == 3
+    assert post('undo', game).json()['shortest_steps'] is None

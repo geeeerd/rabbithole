@@ -6,8 +6,8 @@ const entity = (id:string,label:string) => ({id,label,description:'A topic',sour
 const start = entity('Q7251','Alan Turing');
 const destination = entity('Q35794','University of Cambridge');
 const edge = {id:'statement-1',source:start.id,target:destination.id,label:'part of',property_id:'P361',references:[],qualifiers:{},source_url:'https://www.wikidata.org/wiki/Q7251#P361'};
-const initial:Game = {token:'signed-start',id:'daily',graph_version:'v1',start,destination,current:start,path:[],visited:[start],choices:[{edge,entity:destination}],steps:0,hints_used:0,complete:false,max_steps:12,hint_edge_id:null,daily_date:'2026-11-06',model:'Directed snapshot',snapshot_date:'2026-11-06'};
-const complete:Game = {...initial,token:'signed-win',current:destination,path:[edge],visited:[start,destination],choices:[],steps:1,complete:true};
+const initial:Game = {token:'signed-start',id:'daily',graph_version:'v1',start,destination,current:start,path:[],visited:[start],choices:[{edge,entity:destination}],steps:0,hints_used:0,complete:false,shortest_steps:null,max_steps:12,hint_edge_id:null,daily_date:'2026-11-06',model:'Directed snapshot',snapshot_date:'2026-11-06'};
+const complete:Game = {...initial,token:'signed-win',current:destination,path:[edge],visited:[start,destination],choices:[],steps:1,complete:true,shortest_steps:1};
 let mockApi:ReturnType<typeof vi.fn>;
 beforeEach(()=>{
  sessionStorage.clear();
@@ -26,6 +26,7 @@ it('validates a move with the server before showing completion and continuing ex
  const move=await screen.findByRole('button',{name:/part of.*University of Cambridge/});
  fireEvent.click(move);
  await screen.findByText('You followed the thread.');
+ expect(screen.getByText('You matched the shortest route in this puzzle.')).toBeTruthy();
  expect(mockApi).toHaveBeenCalledWith('/api/challenges/validate-move',expect.objectContaining({body:JSON.stringify({token:'signed-start',edge_id:edge.id})}));
  expect(sessionStorage.getItem('rabbithole-challenge-v1')).toBe('signed-win');
  fireEvent.click(screen.getByRole('button',{name:/Keep exploring/}));

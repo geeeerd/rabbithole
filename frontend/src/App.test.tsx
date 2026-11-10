@@ -93,3 +93,23 @@ it('searches loaded connections by topic or ID and keeps the results after inspe
   expect((search as HTMLInputElement).value).toBe('Túring p361');
   expect(document.activeElement).toBe(screen.getByRole('button', { name: incoming }));
 });
+
+it('compares direct statements and shared neighbors using the graph relationship filter', async () => {
+  const root = { ...a, edges: a.edges.map(edge => ({ ...edge, property_id: 'P69', label: 'educated at' })) };
+  vi.mocked(fetch).mockImplementation(async url => ({
+    ok: true, json: async () => String(url).includes('Q924289') ? b : root,
+  }) as Response);
+  history.replaceState(null, '', '/?entity=Q7251&expand=Q924289');
+  render(<App/>);
+  fireEvent.click(await screen.findByText('Compare topics'));
+  expect(screen.getByText('1 direct connection · 0 shared neighbors')).toBeTruthy();
+  const comparison = screen.getByLabelText('Compare Alan Turing with');
+  fireEvent.change(comparison, { target: { value: 'Q35794' } });
+  expect(screen.getByText('0 direct connections · 1 shared neighbor')).toBeTruthy();
+  const common = screen.getByRole('region', { name: 'Shared neighbors' });
+  fireEvent.click(common.querySelector('summary')!);
+  const evidence = screen.getByRole('link', { name: "King's College → part of → University of Cambridge" });
+  expect(evidence.getAttribute('href')).toBe('https://www.wikidata.org/wiki/Q924289#P361');
+  fireEvent.change(screen.getByLabelText('RELATIONSHIP FILTER'), { target: { value: 'P69' } });
+  expect(screen.getByText('0 direct connections · 0 shared neighbors')).toBeTruthy();
+});

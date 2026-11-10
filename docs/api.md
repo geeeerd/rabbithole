@@ -22,6 +22,8 @@ All routes below have typed request/response contracts in `/docs`. Challenges us
 - `POST /api/challenges/undo`: `{ "token": "..." }`. Removes one move, preserving hint count.
 - `POST /api/challenges/verify-path`: `{ "token": "..." }`. Rechecks signed progress and every directed edge; reports completion only at the destination.
 
+Game responses include `shortest_steps` once the signed route reaches its destination. The minimum is calculated within the versioned, directed puzzle graph. Before completion the field is null.
+
 Game responses include start/destination/current entities, choices with source statements, visited entities, path edges, step count, hints, completion, snapshot version, model and a replacement token. Always use the latest token. Invalid, altered, expired or obsolete tokens return 422. The 12-step cap is enforced by the server.
 
 Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through the backend environment; an ephemeral random process key is used otherwise. Token replay is possible by design; there is no leaderboard, prize or competitive score. No tokens are included in share links.

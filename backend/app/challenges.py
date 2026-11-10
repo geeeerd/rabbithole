@@ -50,6 +50,7 @@ def view(state):
     collection = COLLECTIONS_BY_VERSION[state["version"]]
     current, path = validated_path(state, collection)
     complete = current == state["destination"]
+    shortest_route = collection.route(state["start"], state["destination"]) if complete else None
     choices = []
     if not complete and len(path) < MAX_STEPS:
         choices = [
@@ -70,6 +71,7 @@ def view(state):
         "steps": len(path),
         "hints_used": state["hints"],
         "complete": complete,
+        "shortest_steps": len(shortest_route) if shortest_route is not None else None,
         "max_steps": MAX_STEPS,
         "hint_edge_id": state.get("hint_edge"),
         "model": collection.model,
@@ -107,6 +109,7 @@ class GameResponse(BaseModel):
     steps: int
     hints_used: int
     complete: bool
+    shortest_steps: int | None
     max_steps: int
     hint_edge_id: str | None
     model: str

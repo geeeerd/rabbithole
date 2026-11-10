@@ -39,6 +39,8 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 - TimeAtlas at `/timeline` shows recorded dates with original precision, calendar and statement sources. `/map` shows recorded places on a present-day land map with coordinate and relationship evidence.
 - Save up to 30 explorations in the current browser. **Saved Trails** reopens a trail with its selected topic, branches, filter and requested connection pages using current graph data.
 - **Inspect connections** searches loaded statements by topic, relationship or Wikidata ID. Filter for arrows pointing to or from the selected topic and open any result to see its evidence.
+- **Compare topics** shows direct statements and shared neighbors between the selected topic and another one in the loaded graph, with links to the original statements.
+- **Focus selected topic** dims unrelated parts of the graph while keeping its immediate neighbors and any traced route visible.
 - Discovery Stories at `/stories`: three guided journeys with validated statement sequences, chapter links, public-domain portraits, attribution and links into exploration.
 - Connection Challenge at `/challenge`: three rotating daily puzzles, dated replay links, themed practice pairs, server-validated moves, hints, undo, signed progress recovery, source links and shareable results.
 - Timeouts, bounded upstream concurrency, retries and a bounded one-hour in-memory cache.
@@ -63,7 +65,7 @@ CI runs the tests and builds a release container with a smoke test. Both package
 
 Additional reviewed challenges and stories, persistent storage, a full accessibility audit and performance profiling remain on the roadmap. Shared links reconstruct neighborhoods from current Wikidata data or the offline collection. The graph pages through outgoing statements, checks incoming statements and can discover extra links between visible topics. A trail supports up to 100 topics, eight expanded branches, six additional outgoing pages and four incoming checks. Search and fallback support English. The offline collection covers a small group of bundled topics.
 
-The daily rotation follows three reviewed routes from the Discovery Stories catalog. Dated links replay the same puzzle. Each practice collection has its own bundled topics and directed relationship types. Signed progress expires after 24 hours. Set `CHALLENGE_SIGNING_KEY` in the backend environment for progress to survive server restarts; without it, a temporary process key is used. There is no leaderboard or claim of a globally shortest route.
+The daily rotation follows three reviewed routes from the Discovery Stories catalog. Dated links replay the same puzzle. Each practice collection has its own bundled topics and directed relationship types. Completed routes are compared with the shortest route in the same directed puzzle graph. Signed progress expires after 24 hours. Set `CHALLENGE_SIGNING_KEY` in the backend environment for progress to survive server restarts. Otherwise, the backend uses a temporary process key.
 
 The release includes a same-origin site and API with request limits. Host configuration and verification are described in the [release guide](docs/release.md). Cached data timestamps indicate response assembly time. The seed manifest records snapshot time. In-memory caches reset on process restart.
 

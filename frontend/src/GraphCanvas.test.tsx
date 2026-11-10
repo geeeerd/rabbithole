@@ -8,7 +8,7 @@ vi.mock('cytoscape',()=>({default:vi.fn(()=>mocks.c)}));
 beforeEach(()=>{
  vi.clearAllMocks();mocks.handlers={};
  mocks.c.on.mockImplementation((_event,selector,handler)=>{mocks.handlers[selector]=handler});
- mocks.c.batch.mockImplementation(fn=>fn());mocks.c.elements.mockReturnValue({remove:vi.fn()});mocks.c.edges.mockReturnValue({removeClass:vi.fn()});mocks.c.layout.mockReturnValue({run:vi.fn()});mocks.c.nodes.mockReturnValue({unselect:vi.fn()});mocks.c.$id.mockReturnValue({select:vi.fn()});mocks.c.zoom.mockReturnValue(1);
+ mocks.c.batch.mockImplementation(fn=>fn());mocks.c.elements.mockReturnValue({remove:vi.fn(),removeClass:vi.fn()});mocks.c.edges.mockReturnValue({removeClass:vi.fn()});mocks.c.layout.mockReturnValue({run:vi.fn()});mocks.c.nodes.mockReturnValue({unselect:vi.fn()});mocks.c.$id.mockReturnValue({select:vi.fn(),addClass:vi.fn()});mocks.c.zoom.mockReturnValue(1);
  vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});vi.stubGlobal('matchMedia',vi.fn(()=>({matches:true})));
 });
 afterEach(()=>{cleanup();vi.unstubAllGlobals()});
@@ -32,4 +32,28 @@ it('filters visible edges without reversing them and supports keyboard zoom',()=
  expect(mocks.c.add.mock.calls[0][0]).toHaveLength(graph.nodes.length);
  const canvas=screen.getByRole('group',{name:'Knowledge graph'});fireEvent.keyDown(canvas,{key:'+'});expect(mocks.c.zoom).toHaveBeenCalledWith(1.2);
  fireEvent.keyDown(canvas,{key:'0'});expect(mocks.c.fit).toHaveBeenCalledWith(undefined,50);
+});
+
+it('emphasizes the selected neighborhood and traced route without moving the graph', () => {
+ const graph = fixture('Q1', ['Q2', 'Q3', 'Q4', 'Q5']);
+ graph.edges = [...fixture('Q1', ['Q2']).edges, ...fixture('Q2', ['Q3', 'Q4']).edges];
+ const ids = [...graph.nodes.map(node => node.id), ...graph.edges.map(edge => edge.id)];
+ let dimmed: string[] = [];
+ const elements = {
+  remove: vi.fn(),
+  removeClass: vi.fn(() => { dimmed = []; }),
+  filter: (predicate: (element: { id: () => string }) => boolean) => ({
+   addClass: () => { dimmed = ids.filter(id => predicate({ id: () => id })); },
+  }),
+ };
+ mocks.c.elements.mockReturnValue(elements);
+ render(<GraphCanvas graph={graph} selectedId="Q1" filter="all" light={false} routeIds={['Q1-Q2', 'Q2-Q3']}
+  onSelect={vi.fn()} onInspect={vi.fn()} onReset={vi.fn()}/>);
+ const focus = screen.getByRole('button', { name: 'Focus selected topic' });
+ fireEvent.click(focus);
+ expect(focus.getAttribute('aria-pressed')).toBe('true');
+ expect(dimmed).toEqual(['Q4', 'Q5', 'Q2-Q4']);
+ expect(mocks.c.layout).toHaveBeenCalledTimes(1);
+ fireEvent.click(focus);
+ expect(dimmed).toEqual([]);
 });

@@ -39,6 +39,36 @@ it('restores complete branches and view settings from a fresh URL',async()=>{
   expect(screen.getByTestId('selected').textContent).toBe('Q3');
   expect(screen.getByTestId('filter').textContent).toBe('P361');
 });
+it('clears a relationship filter when its last matching branch is collapsed', async () => {
+  const root = { ...graphs.Q1, edges: graphs.Q1.edges.map(edge => ({ ...edge, property_id: 'P69' })) };
+  vi.mocked(fetch).mockImplementation(async url => ({
+    ok: true, json: async () => String(url).includes('entity=Q2') ? graphs.Q2 : root,
+  }) as Response);
+  history.replaceState(null, '', '/?entity=Q1&expand=Q2&filter=P361');
+  render(<Harness/>);
+  await waitFor(() => expect(screen.getByTestId('filter').textContent).toBe('P361'));
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
+  expect(screen.getByTestId('filter').textContent).toBe('all');
+  expect(new URLSearchParams(location.search).has('filter')).toBe(false);
+});
+
+it('opens reachable branches from a stale shared link and retries the original link', async () => {
+  let changed = false;
+  vi.mocked(fetch).mockImplementation(async url => {
+    const id = new URL(String(url), location.origin).searchParams.get('entity');
+    const graph = id === 'Q2' && !changed ? fixture('Q2', []) : graphs[id as keyof typeof graphs];
+    return { ok: true, json: async () => graph } as Response;
+  });
+  history.replaceState(null, '', '/?entity=Q1&expand=Q2,Q3&selected=Q4');
+  render(<Harness/>);
+  await waitFor(() => expect(screen.getByTestId('error').textContent).toContain('no longer reachable'));
+  expect(screen.getByTestId('nodes').textContent).toBe('Q1,Q2');
+  expect(new URLSearchParams(location.search).get('expand')).toBe('Q2');
+  changed = true;
+  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+  await waitFor(() => expect(screen.getByTestId('selected').textContent).toBe('Q4'));
+  expect(new URLSearchParams(location.search).get('expand')).toBe('Q2,Q3');
+});
 it('restores session history from saved data without upstream calls',async()=>{
   render(<Harness/>);
   fireEvent.click(screen.getByText('Start'));

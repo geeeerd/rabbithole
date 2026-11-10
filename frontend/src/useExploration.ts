@@ -49,6 +49,13 @@ export function useExploration(enabled = true) {
   const positionRef = useRef(position);
 
   function commit(next: Snapshot | null, push: boolean) {
+    if (next && next.trail.filter !== 'all') {
+      const filter = next.trail.filter;
+      const sources = [...Object.values(next.bundles), ...(next.links ?? [])];
+      if (!sources.some(source => source.edges.some(edge => edge.property_id === filter))) {
+        next = { ...next, trail: { ...next.trail, filter: 'all' } };
+      }
+    }
     current.current = next;
     setSnapshot(next);
     if (push) {
@@ -77,9 +84,10 @@ export function useExploration(enabled = true) {
     }
   }
 
-  function restoreUrl() {
+  function restoreUrl(search = location.search) {
+    const retry = () => restoreUrl(search);
     void run(async signal => {
-      const trail = readTrail(location.search);
+      const trail = readTrail(search);
       if (!trail) return null;
       const bundles: Record<string, Graph> = {};
     const pages: Record<string, number> = {};
@@ -102,7 +110,7 @@ export function useExploration(enabled = true) {
     while (remaining.size) {
       const visible = new Set(Object.values(bundles).flatMap(g => g.nodes.map(n => n.id)));
       const id = [...remaining].find(id => visible.has(id));
-      if (!id) throw new Error('This exploration link contains a disconnected branch.');
+      if (!id) break;
       await load(id);
       remaining.delete(id);
       buildSnapshot({ ...trail, expanded: Object.keys(bundles).filter(key => key !== trail.root), pages, incoming }, bundles);
@@ -120,8 +128,12 @@ export function useExploration(enabled = true) {
         break;
       }
     }
+    if (remaining.size && !signal.aborted) {
+      setError('Some branches are no longer reachable from the loaded connections. The available part of your trail is open.');
+      setRetryAction(() => retry);
+    }
     return snapshot;
-    }, false, restoreUrl);
+    }, false, retry);
   }
 
   useEffect(() => {
