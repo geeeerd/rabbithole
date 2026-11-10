@@ -43,7 +43,7 @@ async def request(params):
 
 async def entities(ids):
     try:
-        result = await request({"action": "wbgetentities", "ids": "|".join(ids), "languages": "en", "props": "labels|descriptions|claims"})
+        result = await request({"action": "wbgetentities", "ids": "|".join(ids), "languages": "en|mul", "props": "labels|descriptions|claims"})
         return result["entities"], False
     except (httpx.HTTPError, ValueError):
         result = {}

@@ -6,7 +6,8 @@ The original product plan is preserved in `blueprint.md`.
 - [x] Initial data engine: live search, ID validation, normalization, allowlist, references, bounded caching, retries and fallback snapshots.
 - [x] First graph: Cytoscape, pan/zoom, expansion, ID deduplication, recentering, profiles and statement inspection.
 - [x] Exploration continuity: branch collapse with shared-neighbor preservation, Back/Forward snapshots, URL serialization of expanded topics and view settings, and frontend interaction tests.
-- [ ] Complete discovery MVP: accessibility audit, graph rendering/keyboard interaction tests, performance profiling and reproducible beta deployment.
+- [x] Explorer usability: accessible search, graph keyboard controls, renderer lifecycle tests, page-level axe checks and deferred graph/route bundles with a build-size budget.
+- [ ] Complete discovery MVP: real-browser contrast/screen-reader/mobile audit, device performance profiling and reproducible beta deployment.
 - [x] First Connection Challenge: versioned directed snapshot, typed APIs, signed move/path validation, hints, undo, progress recovery, result sharing and custom practice pairs.
 - [ ] Expand challenges: additional reviewed daily puzzles, category modes, larger cached collections and production anti-abuse controls. The starter daily puzzle repeats; practice is limited to the bundled graph.
 - [x] Discovery Stories: three curated narratives, startup-validated statement sequences, chapter navigation/deep links, public-domain portraits, attribution and story-to-graph handoff.

@@ -28,13 +28,14 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 
 ## Working now
 
-- Debounced Wikidata topic search and autocomplete.
+- Debounced Wikidata search with keyboard autocomplete, announcements, no-results states and retry.
 - Directed, labeled graph with zoom, pan, progressive expansion, branch collapse, reset and recentering.
 - Branch chips and Back/Forward controls with graph snapshots for offline history navigation.
 - Entity profiles, property filters and accessible topic/connection lists.
 - Statement inspection including references, qualifiers and original source links.
 - Shareable exploration URLs preserving the root, up to eight expanded branches, selected topic and relationship filter.
-- Light/dark themes.
+- Keyboard graph controls, a skip link, accessible connection lists and locally remembered light/dark themes.
+- Graph and secondary routes load on demand; builds enforce an initial JavaScript budget.
 - Discovery Stories at `/stories`: three guided journeys with validated statement sequences, chapter links, public-domain portraits, attribution and links into exploration.
 - Connection Challenge at `/challenge`: daily starter puzzle, custom practice pairs, server-validated moves, hints, undo, signed progress recovery, source links and shareable results.
 - Timeouts, bounded upstream concurrency, retries and a bounded one-hour in-memory cache.
