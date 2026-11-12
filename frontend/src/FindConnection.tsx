@@ -12,7 +12,7 @@ type RouteResponse = {
 };
 
 type Result = { nodes: Entity[]; steps: RouteStep[]; savedIds?: string[]; checked?: number; partial?: boolean };
-type Lookup = { target: string; result: Result } | { target: string; error: string };
+type Lookup = { target: string; arrowsOnly: boolean } & ({ result: Result } | { error: string });
 
 function ConnectionPath({ result, start }: { result: Result; start: Entity }) {
   const labels = new Map(result.nodes.map(node => [node.id, node.label]));
@@ -35,20 +35,22 @@ function ConnectionPath({ result, start }: { result: Result; start: Entity }) {
   </ol>;
 }
 
-export function FindConnection({ graph, start, target, destination, disabled, onTargetChange, onDestination }: {
+export function FindConnection({ graph, start, target, destination, arrowsOnly, disabled, onTargetChange, onArrowsChange, onDestination }: {
   graph: Graph;
   start: Entity;
   target?: string;
   destination?: Entity;
+  arrowsOnly: boolean;
   disabled: boolean;
   onTargetChange: (target?: string) => void;
+  onArrowsChange: (arrowsOnly: boolean) => void;
   onDestination: (entity: Entity) => void;
 }) {
   const [lookup, setLookup] = useState<Lookup | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [sameTopic, setSameTopic] = useState(false);
-  const loaded = useMemo(() => target ? visibleRoute(graph, start.id, target, 'all', false) : null,
-    [graph, start.id, target]);
+  const loaded = useMemo(() => target ? visibleRoute(graph, start.id, target, 'all', arrowsOnly) : null,
+    [graph, start.id, target, arrowsOnly]);
   const needsLookup = !!target && !loaded;
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function FindConnection({ graph, start, target, destination, disabled, on
     const request = new AbortController();
     setLookup(null);
     const query = new URLSearchParams({ start: start.id, target });
+    if (arrowsOnly) query.set('arrows_only', 'true');
     void (async () => {
       try {
         const response = await fetch('/api/graph/route?' + query, { signal: request.signal });
@@ -65,14 +68,14 @@ export function FindConnection({ graph, start, target, destination, disabled, on
         if (request.signal.aborted) return;
         const resolved = route.nodes.find(node => node.id === target);
         if (resolved) onDestination(resolved);
-        setLookup({ target, result: { nodes: route.nodes, checked: route.checked, partial: route.partial,
+        setLookup({ target, arrowsOnly, result: { nodes: route.nodes, checked: route.checked, partial: route.partial,
           savedIds: route.saved_edge_ids, steps: route.steps.map(({ from_id, to_id, ...step }) => ({ ...step, from: from_id, to: to_id })) } });
       } catch (failure) {
-        if (!request.signal.aborted) setLookup({ target, error: failure instanceof Error ? failure.message : 'Could not look for a connection.' });
+        if (!request.signal.aborted) setLookup({ target, arrowsOnly, error: failure instanceof Error ? failure.message : 'Could not look for a connection.' });
       }
     })();
     return () => request.abort();
-  }, [start.id, target, needsLookup, attempt, onDestination]);
+  }, [start.id, target, needsLookup, arrowsOnly, attempt, onDestination]);
 
   function choose(topic: Entity) {
     setSameTopic(start.id === topic.id);
@@ -82,7 +85,7 @@ export function FindConnection({ graph, start, target, destination, disabled, on
     onTargetChange(topic.id);
   }
 
-  const currentLookup = lookup && lookup.target === target ? lookup : null;
+  const currentLookup = lookup?.target === target && lookup?.arrowsOnly === arrowsOnly ? lookup : null;
   const result: Result | null = loaded ? { nodes: graph.nodes, steps: loaded, savedIds: graph.saved_edge_ids }
     : currentLookup && 'result' in currentLookup ? currentLookup.result : null;
   const error = !loaded && currentLookup && 'error' in currentLookup ? currentLookup.error : '';
@@ -105,17 +108,20 @@ export function FindConnection({ graph, start, target, destination, disabled, on
         <h3>{start.label} → {label}</h3>
         <button disabled={disabled} onClick={clear}>Clear destination</button>
       </div>
+      <label className="connection-direction"><input type="checkbox" checked={arrowsOnly} disabled={disabled}
+        onChange={event => onArrowsChange(event.target.checked)}/> Follow statement arrows only</label>
       {!result && !error && <p role="status">Checking nearby Wikidata topics…</p>}
       {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(count => count + 1)}>Retry connection search</button></div>}
       {result && <>
         <p role="status">{result.steps.length
           ? `${result.steps.length} ${result.steps.length === 1 ? 'connection' : 'connections'} found ${result.checked === undefined ? 'in this trail' : 'in the checked neighborhood'}.`
-          : 'No route found in the checked neighborhood.'}</p>
+          : arrowsOnly ? 'No route following the arrows was found in the checked neighborhood.'
+            : 'No route found in the checked neighborhood.'}</p>
         {result.checked !== undefined && <p>Checked {result.checked} topic records for routes of up to three connections.{result.partial && ' Some live records were unavailable.'}</p>}
         {result.steps.length > 0 && <ConnectionPath result={result} start={start}/>}
         <div className="connection-result-actions">
           {result.steps.length === 0 && <a href={`/?entity=${target}`}>Explore destination ↗</a>}
-          <a href={`/?entity=${target}&target=${start.id}`}>Swap topics ↔</a>
+          <a href={`/?entity=${target}&target=${start.id}${arrowsOnly ? '&arrows=1' : ''}`}>Swap topics ↔</a>
         </div>
       </>}
     </div>}

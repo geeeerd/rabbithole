@@ -69,11 +69,12 @@ class TopicRoute(BaseModel):
     partial: bool
 
 
-def find_route(edges: list[Edge], start: str, target: str) -> list[RouteStep]:
+def find_route(edges: list[Edge], start: str, target: str, *, arrows_only: bool = False) -> list[RouteStep]:
     neighbors = defaultdict(list)
     for edge in edges:
         neighbors[edge.source].append((edge.target, edge, False))
-        neighbors[edge.target].append((edge.source, edge, True))
+        if not arrows_only:
+            neighbors[edge.target].append((edge.source, edge, True))
     queue = deque([(start, [])])
     visited = {start}
     while queue:

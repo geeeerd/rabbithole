@@ -152,19 +152,24 @@ it('finds, saves and reopens a connection to a topic outside the starting graph'
   expect(screen.getByRole('combobox', { name: 'Search another Wikidata topic' })).toBeTruthy();
   expect(location.search).toBe('?entity=Q7251&target=Q35794');
   expect(screen.getByRole('link', { name: /Swap topics/ }).getAttribute('href')).toBe('/?entity=Q35794&target=Q7251');
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Follow statement arrows only' }));
+  expect(location.search).toBe('?entity=Q7251&target=Q35794&arrows=1');
+  await screen.findByText('2 connections found in the checked neighborhood.');
+  expect(fetch).toHaveBeenCalledWith('/api/graph/route?start=Q7251&target=Q35794&arrows_only=true', expect.anything());
   fireEvent.click(screen.getByRole('button', { name: 'Save trail' }));
   explorer.unmount();
 
   history.replaceState(null, '', '/trails');
   const saved = render(<App/>);
   const query = screen.getByRole('link', { name: 'Alan Turing → University of Cambridge' }).getAttribute('href');
-  expect(query).toBe('/?entity=Q7251&target=Q35794');
+  expect(query).toBe('/?entity=Q7251&target=Q35794&arrows=1');
   saved.unmount();
 
   history.replaceState(null, '', query!);
   render(<App/>);
   await screen.findByText('2 connections found in the checked neighborhood.');
   expect(screen.getByRole('heading', { name: 'Alan Turing → University of Cambridge' })).toBeTruthy();
+  expect((screen.getByRole('checkbox', { name: 'Follow statement arrows only' }) as HTMLInputElement).checked).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Clear destination' }));
   expect(location.search).toBe('?entity=Q7251');
   expect(screen.queryByText('2 connections found in the checked neighborhood.')).toBeNull();

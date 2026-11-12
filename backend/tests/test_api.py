@@ -143,5 +143,9 @@ def test_route_search_uses_bounded_bridge_records_and_preserves_arrows(monkeypat
     assert route['checked'] == 4
     assert [step['reversed'] for step in route['steps']] == [False, False, True]
     assert route['steps'][-1]['edge']['source'] == 'Q4'
+    assert not client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q4', 'arrows_only': True}).json()['steps']
+    forward = client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q3', 'arrows_only': True}).json()
+    assert [step['to_id'] for step in forward['steps']] == ['Q2', 'Q3']
+    assert all(not step['reversed'] for step in forward['steps'])
     assert not client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q5'}).json()['steps']
     assert client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q1'}).status_code == 422

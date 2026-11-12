@@ -280,7 +280,7 @@ async def resolve_property_labels(edges):
 
 
 @app.get("/api/graph/route", response_model=TopicRoute)
-async def graph_route(start: str, target: str):
+async def graph_route(start: str, target: str, arrows_only: bool = False):
     validate(start)
     validate(target)
     if start == target:
@@ -297,7 +297,7 @@ async def graph_route(start: str, target: str):
     if offline:
         saved.update(statements)
     neighborhood = varied_order(list({**saved, **statements}.values()))
-    steps = find_route(neighborhood, start, target)
+    steps = find_route(neighborhood, start, target, arrows_only=arrows_only)
     records = dict(endpoints)
     partial = offline
 
@@ -313,7 +313,8 @@ async def graph_route(start: str, target: str):
             saved.update(bridge_edges)
         else:
             saved = {key: edge for key, edge in saved.items() if edge.source not in bridges}
-        steps = find_route(varied_order(list({**saved, **statements, **bridge_edges}.values())), start, target)
+        expanded = varied_order(list({**saved, **statements, **bridge_edges}.values()))
+        steps = find_route(expanded, start, target, arrows_only=arrows_only)
 
     ids = [start, *(step.to_id for step in steps)] if steps else [start, target]
     lookups = list(dict.fromkeys([
