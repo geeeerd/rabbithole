@@ -201,3 +201,27 @@ it('starts a two-topic search directly from the homepage', async () => {
   expect(location.search).toBe('?entity=Q7251&target=Q924289');
   expect(fetch).not.toHaveBeenCalledWith(expect.stringContaining('/api/graph/route'), expect.anything());
 });
+
+it('runs a wider search from a quick miss and keeps the deeper setting in the link', async () => {
+  const target = { id: 'Q35794', label: 'University of Cambridge', description: '', source_url: '' };
+  const admin = { ...fixture('Q7251', ['Q35794']).edges[0], property_id: 'P5008' };
+  const graph = { ...a, nodes: [...a.nodes, target], edges: [...a.edges, admin] };
+  vi.mocked(fetch).mockImplementation(async url => {
+    const path = new URL(String(url), location.origin);
+    const deep = path.searchParams.get('depth') === 'deep';
+    const route = { nodes: [...a.nodes, target], checked: deep ? 25 : 12, saved_edge_ids: [], partial: false,
+      max_steps: deep ? 4 : 3, steps: deep ? [...a.edges, ...b.edges].map(edge => ({
+        from_id: edge.source, to_id: edge.target, edge, reversed: false,
+      })) : [] };
+    return { ok: true, json: async () => path.pathname.endsWith('/route') ? route : graph } as Response;
+  });
+  history.replaceState(null, '', '/?entity=Q7251&target=Q35794&arrows=1');
+  render(<App/>);
+  fireEvent.click(await screen.findByRole('button', { name: 'Search deeper' }));
+  await screen.findByText('Checked 25 topic records for routes of up to 4 connections.');
+  expect(location.search).toBe('?entity=Q7251&target=Q35794&arrows=1&depth=deep');
+  expect(fetch).toHaveBeenCalledWith('/api/graph/route?start=Q7251&target=Q35794&arrows_only=true&depth=deep', expect.anything());
+  fireEvent.click(screen.getByRole('button', { name: 'Use quick search' }));
+  await screen.findByRole('button', { name: 'Search deeper' });
+  expect(location.search).toBe('?entity=Q7251&target=Q35794&arrows=1');
+});

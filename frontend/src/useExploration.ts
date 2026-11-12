@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildSnapshot, MAX_BRANCHES, MAX_EXTRA_PAGES, MAX_INCOMING_PAGES, MAX_LINK_SCANS, LINK_SOURCE_LIMIT, mergeGraph, mergeIncoming, mergePage, pageCount, readTrail, trailUrl } from './exploration';
-import type { Entity, Graph, IncomingPage, LinkScan, Snapshot } from './exploration';
+import type { ConnectionOptions, Entity, Graph, IncomingPage, LinkScan, Snapshot } from './exploration';
 
 async function fetchGraph(id: string, signal: AbortSignal, offset?: number): Promise<Graph> {
   const params = new URLSearchParams({ entity: id });
@@ -224,12 +224,12 @@ export function useExploration(enabled = true) {
   function setConnectionTarget(target?: string) {
     const previous = current.current;
     if (!previous || busy || target === previous.trail.root || target === previous.trail.target) return;
-    commit({ ...previous, trail: { ...previous.trail, target, arrowsOnly: target ? previous.trail.arrowsOnly : undefined } }, true);
+    commit({ ...previous, trail: { ...previous.trail, target, ...(!target && { arrowsOnly: undefined, deep: undefined }) } }, true);
   }
-  function setConnectionArrows(arrowsOnly: boolean) {
+  function setConnectionOptions(options: ConnectionOptions) {
     const previous = current.current;
-    if (!previous?.trail.target || busy || Boolean(previous.trail.arrowsOnly) === arrowsOnly) return;
-    commit({ ...previous, trail: { ...previous.trail, arrowsOnly } }, true);
+    if (!previous?.trail.target || busy) return;
+    commit({ ...previous, trail: { ...previous.trail, ...options } }, true);
   }
   function collapse(id: string) {
     const previous = current.current;
@@ -246,7 +246,7 @@ export function useExploration(enabled = true) {
   const checkedTopics = new Set(scans.flatMap(scan => scan.scanned_ids)).size;
   const canLoadLinks = !!graph && graph.nodes.length >= 2 && scans.length < MAX_LINK_SCANS
     && nextSources(graph.nodes.map(node => node.id), scans).length > 0;
-  return { graph, selected, snapshot, busy, error, setError, loadLinks, checkedTopics, canLoadLinks, retry: () => retryAction?.(), explore, loadMore, loadIncoming, home, collapse, setConnectionTarget, setConnectionArrows,
+  return { graph, selected, snapshot, busy, error, setError, loadLinks, checkedTopics, canLoadLinks, retry: () => retryAction?.(), explore, loadMore, loadIncoming, home, collapse, setConnectionTarget, setConnectionOptions,
     filter: snapshot?.trail.filter || 'all',
     setSelected: (entity: Entity | null) => { if (entity && snapshot) updateView(entity.id, snapshot.trail.filter); },
     setFilter: (filter: string) => { if (snapshot) updateView(snapshot.trail.selected, filter); },

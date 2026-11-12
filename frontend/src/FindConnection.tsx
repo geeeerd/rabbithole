@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Edge, Entity, Graph } from './exploration';
-import { visibleRoute, type RouteStep } from './pathfinding';
+import type { ConnectionOptions, Edge, Entity, Graph } from './exploration';
+import { visibleRoute, WIKIMEDIA_ADMIN_PROPERTIES, type RouteStep } from './pathfinding';
 import { SearchBox } from './SearchBox';
 
 type RouteResponse = {
@@ -9,10 +9,11 @@ type RouteResponse = {
   checked: number;
   saved_edge_ids: string[];
   partial: boolean;
+  max_steps: number;
 };
 
-type Result = { nodes: Entity[]; steps: RouteStep[]; savedIds?: string[]; checked?: number; partial?: boolean };
-type Lookup = { target: string; arrowsOnly: boolean } & ({ result: Result } | { error: string });
+type Result = { nodes: Entity[]; steps: RouteStep[]; savedIds?: string[]; checked?: number; partial?: boolean; maxSteps?: number };
+type Lookup = { target: string; arrowsOnly: boolean; deep: boolean } & ({ result: Result } | { error: string });
 
 function ConnectionPath({ result, start }: { result: Result; start: Entity }) {
   const labels = new Map(result.nodes.map(node => [node.id, node.label]));
@@ -35,21 +36,22 @@ function ConnectionPath({ result, start }: { result: Result; start: Entity }) {
   </ol>;
 }
 
-export function FindConnection({ graph, start, target, destination, arrowsOnly, disabled, onTargetChange, onArrowsChange, onDestination }: {
+export function FindConnection({ graph, start, target, destination, arrowsOnly, deep, disabled, onTargetChange, onOptionsChange, onDestination }: {
   graph: Graph;
   start: Entity;
   target?: string;
   destination?: Entity;
   arrowsOnly: boolean;
+  deep: boolean;
   disabled: boolean;
   onTargetChange: (target?: string) => void;
-  onArrowsChange: (arrowsOnly: boolean) => void;
+  onOptionsChange: (options: ConnectionOptions) => void;
   onDestination: (entity: Entity) => void;
 }) {
   const [lookup, setLookup] = useState<Lookup | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [sameTopic, setSameTopic] = useState(false);
-  const loaded = useMemo(() => target ? visibleRoute(graph, start.id, target, 'all', arrowsOnly) : null,
+  const loaded = useMemo(() => target ? visibleRoute(graph, start.id, target, 'all', arrowsOnly, WIKIMEDIA_ADMIN_PROPERTIES) : null,
     [graph, start.id, target, arrowsOnly]);
   const needsLookup = !!target && !loaded;
 
@@ -59,6 +61,7 @@ export function FindConnection({ graph, start, target, destination, arrowsOnly, 
     setLookup(null);
     const query = new URLSearchParams({ start: start.id, target });
     if (arrowsOnly) query.set('arrows_only', 'true');
+    if (deep) query.set('depth', 'deep');
     void (async () => {
       try {
         const response = await fetch('/api/graph/route?' + query, { signal: request.signal });
@@ -68,14 +71,15 @@ export function FindConnection({ graph, start, target, destination, arrowsOnly, 
         if (request.signal.aborted) return;
         const resolved = route.nodes.find(node => node.id === target);
         if (resolved) onDestination(resolved);
-        setLookup({ target, arrowsOnly, result: { nodes: route.nodes, checked: route.checked, partial: route.partial,
+        setLookup({ target, arrowsOnly, deep, result: { nodes: route.nodes, checked: route.checked, partial: route.partial,
+          maxSteps: route.max_steps,
           savedIds: route.saved_edge_ids, steps: route.steps.map(({ from_id, to_id, ...step }) => ({ ...step, from: from_id, to: to_id })) } });
       } catch (failure) {
-        if (!request.signal.aborted) setLookup({ target, arrowsOnly, error: failure instanceof Error ? failure.message : 'Could not look for a connection.' });
+        if (!request.signal.aborted) setLookup({ target, arrowsOnly, deep, error: failure instanceof Error ? failure.message : 'Could not look for a connection.' });
       }
     })();
     return () => request.abort();
-  }, [start.id, target, needsLookup, arrowsOnly, attempt, onDestination]);
+  }, [start.id, target, needsLookup, arrowsOnly, deep, attempt, onDestination]);
 
   function choose(topic: Entity) {
     setSameTopic(start.id === topic.id);
@@ -85,7 +89,7 @@ export function FindConnection({ graph, start, target, destination, arrowsOnly, 
     onTargetChange(topic.id);
   }
 
-  const currentLookup = lookup?.target === target && lookup?.arrowsOnly === arrowsOnly ? lookup : null;
+  const currentLookup = lookup?.target === target && lookup?.arrowsOnly === arrowsOnly && lookup?.deep === deep ? lookup : null;
   const result: Result | null = loaded ? { nodes: graph.nodes, steps: loaded, savedIds: graph.saved_edge_ids }
     : currentLookup && 'result' in currentLookup ? currentLookup.result : null;
   const error = !loaded && currentLookup && 'error' in currentLookup ? currentLookup.error : '';
@@ -109,21 +113,23 @@ export function FindConnection({ graph, start, target, destination, arrowsOnly, 
         <button disabled={disabled} onClick={clear}>Clear destination</button>
       </div>
       <label className="connection-direction"><input type="checkbox" checked={arrowsOnly} disabled={disabled}
-        onChange={event => onArrowsChange(event.target.checked)}/> Follow statement arrows only</label>
-      {!result && !error && <p role="status">Checking nearby Wikidata topics…</p>}
+        onChange={event => onOptionsChange({ arrowsOnly: event.target.checked })}/> Follow statement arrows only</label>
+      {!result && !error && <p role="status">{deep ? 'Checking a wider set of Wikidata topics…' : 'Checking nearby Wikidata topics…'}</p>}
       {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(count => count + 1)}>Retry connection search</button></div>}
       {result && <>
         <p role="status">{result.steps.length
           ? `${result.steps.length} ${result.steps.length === 1 ? 'connection' : 'connections'} found ${result.checked === undefined ? 'in this trail' : 'in the checked neighborhood'}.`
           : arrowsOnly ? 'No route following the arrows was found in the checked neighborhood.'
             : 'No route found in the checked neighborhood.'}</p>
-        {result.checked !== undefined && <p>Checked {result.checked} topic records for routes of up to three connections.{result.partial && ' Some live records were unavailable.'}</p>}
+        {result.checked !== undefined && <p>Checked {result.checked} topic records for routes of up to {result.maxSteps ?? (deep ? 4 : 3)} connections.{result.partial && ' Some live records were unavailable.'}</p>}
         {result.steps.length > 0 && <ConnectionPath result={result} start={start}/>}
         <div className="connection-result-actions">
           {result.steps.length === 0 && <a href={`/?entity=${target}`}>Explore destination ↗</a>}
-          <a href={`/?entity=${target}&target=${start.id}${arrowsOnly ? '&arrows=1' : ''}`}>Swap topics ↔</a>
+          <a href={`/?entity=${target}&target=${start.id}${arrowsOnly ? '&arrows=1' : ''}${deep ? '&depth=deep' : ''}`}>Swap topics ↔</a>
         </div>
       </>}
+      {(deep || result?.steps.length === 0) && <button className="connection-depth" disabled={disabled}
+        onClick={() => onOptionsChange({ deep: !deep })}>{deep ? 'Use quick search' : 'Search deeper'}</button>}
     </div>}
   </section>;
 }

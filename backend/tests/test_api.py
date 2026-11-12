@@ -127,7 +127,11 @@ def test_route_search_uses_bounded_bridge_records_and_preserves_arrows(monkeypat
         ]}}
 
     records = {'Q1': item('Q1', ['Q2']), 'Q2': item('Q2', ['Q3']),
-               'Q3': item('Q3', []), 'Q4': item('Q4', ['Q3']), 'Q5': item('Q5', [])}
+               'Q3': item('Q3', []), 'Q4': item('Q4', ['Q3']), 'Q5': item('Q5', []),
+               'Q6': item('Q6', ['Q7']), 'Q7': item('Q7', ['Q10']), 'Q10': item('Q10', ['Q8']),
+               'Q8': item('Q8', ['Q9']), 'Q9': item('Q9', ['Q8'])}
+    for key in ('Q6', 'Q9'):
+        records[key]['claims']['P5008'] = item(key, ['Q99'])['claims']['P69']
     requests = []
 
     async def fixture_request(params):
@@ -149,3 +153,13 @@ def test_route_search_uses_bounded_bridge_records_and_preserves_arrows(monkeypat
     assert all(not step['reversed'] for step in forward['steps'])
     assert not client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q5'}).json()['steps']
     assert client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q1'}).status_code == 422
+    pair = {'start': 'Q6', 'target': 'Q9', 'arrows_only': True}
+    quick = client.get('/api/graph/route', params=pair).json()
+    assert quick['max_steps'] == 3 and not quick['steps']
+    assert not client.get('/api/graph/route', params={**pair, 'arrows_only': False}).json()['steps']
+    requests.clear()
+    deep = client.get('/api/graph/route', params={**pair, 'depth': 'deep'}).json()
+    assert requests == [['Q6', 'Q9'], ['Q7', 'Q8'], ['Q10']]
+    assert deep['max_steps'] == 4 and deep['checked'] == 5
+    assert [step['to_id'] for step in deep['steps']] == ['Q7', 'Q10', 'Q8', 'Q9']
+    assert all(not step['reversed'] for step in deep['steps'])

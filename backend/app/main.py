@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Literal
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query
@@ -9,8 +9,10 @@ from fastapi import FastAPI, HTTPException, Query
 from .articles import Article, wikipedia_intro
 from .challenges import router as challenge_router
 from .connections import (
+    DEEP_ROUTE_CANDIDATES_PER_TOPIC, DEEP_ROUTE_MAX_STEPS, DEEP_ROUTE_MIDDLE_LIMIT, ROUTE_MAX_STEPS,
+    WIKIMEDIA_ADMIN_PROPERTIES,
     GRAPH_LABELS, ITEM_ID, LINK_EDGE_LIMIT, LINK_SOURCE_LIMIT, PAGE_SIZE, IncomingPage, LinkRequest, LinkScan,
-    TopicRoute, find_route, graph_statements, route_candidates, saved_links, varied_order,
+    TopicRoute, find_route, graph_statements, route_candidates, route_statements, saved_links, varied_order,
 )
 from .facts import FACT_PAGE_SIZE, LABELS as FACT_LABELS, FactPage, recorded_facts
 from .geography import Place, Places, coordinate, place_links, relationship_dates, saved_places
@@ -280,7 +282,8 @@ async def resolve_property_labels(edges):
 
 
 @app.get("/api/graph/route", response_model=TopicRoute)
-async def graph_route(start: str, target: str, arrows_only: bool = False):
+async def graph_route(start: str, target: str, arrows_only: bool = False,
+                      depth: Literal["quick", "deep"] = "quick"):
     validate(start)
     validate(target)
     if start == target:
@@ -292,29 +295,52 @@ async def graph_route(start: str, target: str, arrows_only: bool = False):
     _, incoming = saved_links()
     live = {} if offline else endpoints
     saved = {edge.id: edge for key in (start, target) for edge in incoming.get(key, [])
-             if edge.source not in live}
-    statements = {edge.id: edge for item in endpoints.values() for edge in graph_statements(item)}
+             if edge.source not in live and edge.property_id not in WIKIMEDIA_ADMIN_PROPERTIES}
+    statements = {edge.id: edge for item in endpoints.values() for edge in route_statements(item)}
     if offline:
         saved.update(statements)
     neighborhood = varied_order(list({**saved, **statements}.values()))
-    steps = find_route(neighborhood, start, target, arrows_only=arrows_only)
+    deep = depth == "deep"
+    max_steps = DEEP_ROUTE_MAX_STEPS if deep else ROUTE_MAX_STEPS
+    steps = find_route(neighborhood, start, target, arrows_only=arrows_only, max_steps=max_steps)
     records = dict(endpoints)
     partial = offline
 
-    if not steps and (candidates := route_candidates(neighborhood, start, target)):
+    async def load_bridges(candidates: list[str], allowed: set[str] | None = None):
+        nonlocal partial, saved
         fetched, fallback = await entities(candidates)
         bridges = {key: item for key, item in fetched.items() if key in candidates and "missing" not in item}
         records.update(bridges)
         partial = partial or fallback
-        allowed = set(candidates) | {start, target}
-        bridge_edges = {edge.id: edge for item in bridges.values() for edge in graph_statements(item)
-                        if edge.target in allowed}
+        bridge_edges = {edge.id: edge for item in bridges.values() for edge in route_statements(item)
+                        if allowed is None or edge.target in allowed}
         if fallback:
             saved.update(bridge_edges)
         else:
             saved = {key: edge for key, edge in saved.items() if edge.source not in bridges}
+        return bridge_edges
+
+    candidates = [] if steps else (
+        route_candidates(neighborhood, start, target, DEEP_ROUTE_CANDIDATES_PER_TOPIC)
+        if deep else route_candidates(neighborhood, start, target)
+    )
+    if candidates:
+        allowed = set(candidates) | {start, target}
+        bridge_edges = await load_bridges(candidates, None if deep else allowed)
         expanded = varied_order(list({**saved, **statements, **bridge_edges}.values()))
-        steps = find_route(expanded, start, target, arrows_only=arrows_only)
+        steps = find_route(expanded, start, target, arrows_only=arrows_only, max_steps=max_steps)
+        if deep and not steps:
+            near_start = {edge.target for edge in neighborhood if edge.source == start}
+            if not arrows_only:
+                near_start.update(edge.source for edge in neighborhood if edge.target == start)
+            middle = list(dict.fromkeys(
+                edge.target for edge in varied_order(list(bridge_edges.values()))
+                if edge.source in near_start and edge.target not in allowed
+            ))[:DEEP_ROUTE_MIDDLE_LIMIT]
+            if middle:
+                middle_edges = await load_bridges(middle, allowed)
+                expanded = varied_order(list({**saved, **statements, **bridge_edges, **middle_edges}.values()))
+                steps = find_route(expanded, start, target, arrows_only=arrows_only, max_steps=max_steps)
 
     ids = [start, *(step.to_id for step in steps)] if steps else [start, target]
     lookups = list(dict.fromkeys([
@@ -331,7 +357,7 @@ async def graph_route(start: str, target: str, arrows_only: bool = False):
             step.edge = step.edge.model_copy(update={"label": normalize(prop).label})
     return TopicRoute(nodes=[normalize(records.get(key, {"id": key})) for key in ids], steps=steps,
                       checked=checked, saved_edge_ids=[step.edge.id for step in steps if step.edge.id in saved],
-                      partial=partial)
+                      partial=partial, max_steps=max_steps)
 
 
 @app.post("/api/graph/links", response_model=LinkScan)

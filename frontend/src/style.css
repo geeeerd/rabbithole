@@ -68,6 +68,7 @@
 .connection-result-heading h3{margin:0;overflow-wrap:anywhere}
 .connection-result-heading button,.connection-result-actions{font-size:12px}
 .find-connection .connection-direction{margin-top:8px}
+.find-connection .connection-depth{margin-top:10px;font-size:12px}
 .connection-result-actions a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 .find-connection .connection-path{list-style:none;padding:0;margin:12px 0}
 .connection-path-topic{display:inline-flex;max-width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-weight:700;overflow-wrap:anywhere}

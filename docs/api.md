@@ -44,6 +44,10 @@ Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through th
 
 `GET /api/graph/route?start=Q7251&target=Q35794` checks the endpoint records, saved incoming statements and, if needed, up to eight candidate neighbors per endpoint. It returns a route of up to three connections in the checked neighborhood. Pass `arrows_only=true` to follow statement arrows from source to target. The default permits traversal either way and marks steps taken against an arrow. An empty `steps` array means the checked records yielded no route. `saved_edge_ids` marks bundled statements, and `partial` indicates a live record lookup fell back to saved data.
 
+Pass `depth=deep` to search paths of up to four connections. The wider search checks up to 16 neighbors per endpoint and up to 12 additional topics reachable through the starting topic’s neighbors. `max_steps` reports the selected limit and `checked` counts the topic records examined.
+
+Route search skips statements that organize Wikimedia categories, portals, templates and project focus lists.
+
 `GET /api/entities/Q7251/places` returns the topic’s recorded Earth coordinate when available and up to eight related places with usable coordinates. Each point includes precision, the coordinate statement, related place links and supported date qualifiers. `?offline=true` reads the saved coordinates and relationships without live requests.
 
 `GET /api/entities/Q7251/background` returns the introductory excerpt for the linked English Wikipedia article along with article, revision, contributor history and license URLs. A topic without a linked article or usable excerpt returns 404. An upstream outage returns 503.

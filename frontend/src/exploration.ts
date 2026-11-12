@@ -1,7 +1,8 @@
 export type Entity = { id: string; label: string; description: string; source_url: string };
 export type Edge = { id: string; source: string; target: string; label: string; property_id: string; references: unknown[]; qualifiers: Record<string, unknown>; source_url: string };
 export type Graph = { nodes: Entity[]; edges: Edge[]; root_id: string; offline: boolean; truncated: boolean; fetched_at: string; next_offset?: number | null; total_statements?: number | null; saved_edge_ids?: string[]; incoming_cursor?: string | null; incoming_checked?: number };
-export type Trail = { root: string; expanded: string[]; selected: string; filter: string; target?: string; arrowsOnly?: boolean; pages?: Record<string, number>; incoming?: Record<string, number>; linkScans?: number };
+export type ConnectionOptions = { arrowsOnly?: boolean; deep?: boolean };
+export type Trail = ConnectionOptions & { root: string; expanded: string[]; selected: string; filter: string; target?: string; pages?: Record<string, number>; incoming?: Record<string, number>; linkScans?: number };
 export type IncomingPage = { nodes: Entity[]; edges: Edge[]; fetched_at: string; next_cursor: string | null; checked: number };
 export type LinkScan = { edges: Edge[]; scanned_ids: string[]; saved_edge_ids: string[]; offline: boolean; truncated: boolean; fetched_at: string };
 export type Snapshot = { trail: Trail; bundles: Record<string, Graph>; links?: LinkScan[] };
@@ -40,6 +41,7 @@ export function readTrail(search: string): Trail | null {
   const selected = params.get('selected') || root;
   const target = params.get('target');
   const arrowsOnly = target && params.get('arrows') === '1';
+  const deep = target && params.get('depth') === 'deep';
   const filter = params.get('filter') || 'all';
   if (!validId(selected) || (filter !== 'all' && !/^P[1-9][0-9]*$/.test(filter))) throw new Error('This exploration link has invalid view settings.');
   if (target !== null && (!validId(target) || target === root)) throw new Error('This exploration link has an invalid destination topic.');
@@ -50,7 +52,7 @@ export function readTrail(search: string): Trail | null {
     throw new Error('This exploration link has too many cross-link checks.');
   }
   return { root, expanded: expanded.filter(id => id !== root), selected, filter,
-    ...(target ? { target } : {}), ...(arrowsOnly ? { arrowsOnly: true } : {}),
+    ...(target ? { target } : {}), ...(arrowsOnly ? { arrowsOnly: true } : {}), ...(deep ? { deep: true } : {}),
     ...(pages ? { pages } : {}), ...(incoming ? { incoming } : {}), ...(linkScans ? { linkScans } : {}) };
 }
 
@@ -61,6 +63,7 @@ export function trailUrl(trail: Trail): string {
   if (trail.target) {
     params.set('target', trail.target);
     if (trail.arrowsOnly) params.set('arrows', '1');
+    if (trail.deep) params.set('depth', 'deep');
   }
   if (trail.filter !== 'all') params.set('filter', trail.filter);
   for (const key of ['pages', 'incoming'] as const) {

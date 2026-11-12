@@ -5,6 +5,7 @@ import math
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
+from urllib.parse import parse_qs
 
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -56,7 +57,8 @@ class ApiLimits:
             elif path.endswith("/incoming"):
                 cost = 5
             elif path == "/api/graph/route":
-                cost = 6
+                query = parse_qs(scope.get("query_string", b"").decode("latin-1"))
+                cost = 9 if query.get("depth", [])[-1:] == ["deep"] else 6
             retry = bucket.consume(now, cost, self.capacity, self.refill)
             if not retry and upstream:
                 retry = self.upstream.consume(now, cost, 30, 2)

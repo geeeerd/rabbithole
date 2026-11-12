@@ -30,6 +30,11 @@ LINK_SOURCE_LIMIT = 8
 LINK_EDGE_LIMIT = 48
 ROUTE_CANDIDATES_PER_TOPIC = 8
 ROUTE_MAX_STEPS = 3
+DEEP_ROUTE_CANDIDATES_PER_TOPIC = 16
+DEEP_ROUTE_MIDDLE_LIMIT = 12
+DEEP_ROUTE_MAX_STEPS = 4
+# These statements organize Wikimedia pages and projects rather than describing the topic.
+WIKIMEDIA_ADMIN_PROPERTIES = frozenset({"P301", "P910", "P1151", "P1424", "P5008", "P6104"})
 
 
 class LinkRequest(BaseModel):
@@ -67,32 +72,38 @@ class TopicRoute(BaseModel):
     checked: int
     saved_edge_ids: list[str]
     partial: bool
+    max_steps: int
 
 
-def find_route(edges: list[Edge], start: str, target: str, *, arrows_only: bool = False) -> list[RouteStep]:
+def find_route(edges: list[Edge], start: str, target: str, *, arrows_only: bool = False,
+               max_steps: int = ROUTE_MAX_STEPS) -> list[RouteStep]:
     neighbors = defaultdict(list)
     for edge in edges:
         neighbors[edge.source].append((edge.target, edge, False))
         if not arrows_only:
             neighbors[edge.target].append((edge.source, edge, True))
-    queue = deque([(start, [])])
-    visited = {start}
+    queue = deque([(start, 0)])
+    previous: dict[str, tuple[str, Edge, bool] | None] = {start: None}
     while queue:
-        current, steps = queue.popleft()
+        current, depth = queue.popleft()
         if current == target:
-            return steps
-        if len(steps) >= ROUTE_MAX_STEPS:
+            steps = []
+            while (step := previous[current]) is not None:
+                source, edge, reversed_arrow = step
+                steps.append(RouteStep(from_id=source, to_id=current, edge=edge, reversed=reversed_arrow))
+                current = source
+            return list(reversed(steps))
+        if depth >= max_steps:
             continue
         for neighbor, edge, reversed_arrow in neighbors[current]:
-            if neighbor in visited:
+            if neighbor in previous:
                 continue
-            visited.add(neighbor)
-            queue.append((neighbor, [*steps, RouteStep(from_id=current, to_id=neighbor, edge=edge,
-                                                       reversed=reversed_arrow)]))
+            previous[neighbor] = (current, edge, reversed_arrow)
+            queue.append((neighbor, depth + 1))
     return []
 
 
-def route_candidates(edges: list[Edge], start: str, target: str) -> list[str]:
+def route_candidates(edges: list[Edge], start: str, target: str, limit: int = ROUTE_CANDIDATES_PER_TOPIC) -> list[str]:
     candidates = {}
     for endpoint in (start, target):
         neighbors = dict.fromkeys(
@@ -101,8 +112,12 @@ def route_candidates(edges: list[Edge], start: str, target: str) -> list[str]:
         )
         neighbors.pop(start, None)
         neighbors.pop(target, None)
-        candidates.update(dict.fromkeys(list(neighbors)[:ROUTE_CANDIDATES_PER_TOPIC]))
+        candidates.update(dict.fromkeys(list(neighbors)[:limit]))
     return list(candidates)
+
+
+def route_statements(item: dict) -> list[Edge]:
+    return [edge for edge in graph_statements(item) if edge.property_id not in WIKIMEDIA_ADMIN_PROPERTIES]
 
 
 def graph_statements(item: dict) -> list[Edge]:
