@@ -34,6 +34,8 @@ Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through th
 
 `GET /api/stories/daily-discovery` returns the first sourced connection from a published story selected for the current UTC day. Pass `?day=YYYY-MM-DD` to select a day from the current catalog.
 
+`GET /api/stories/topics/Q12418` returns links to published chapters featuring a topic. The optional cover comes from a story that starts at that topic and carries its file-specific attribution.
+
 ## Connection pages and timelines
 
 `GET /api/graph?entity=Q7251&offset=0` and the entity neighbors endpoint return up to 24 root statements per page, plus saved cross-links among visible topics. Pass the returned `next_offset` to load another page. A null offset indicates the end of the available pages. `total_statements` counts root statements before metadata resolution. `saved_edge_ids` marks statements obtained from bundled records. Source and target IDs always follow the original direction.

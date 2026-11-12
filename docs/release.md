@@ -38,4 +38,6 @@ The release caps expensive API traffic with a per-client burst of 30 tokens and 
 
 The default container command disables request access logs. If you enable proxy or host logging, configure retention and avoid retaining search query strings or challenge bodies. The release logs per-process request counts, rate limits, server errors and response times grouped by route type. It excludes topic IDs, search terms, request bodies and client addresses. Under traffic, summaries appear about once a minute. Hosted alerts and traffic limits across multiple workers depend on the hosting environment.
 
+The summary also includes Wikidata cache hits, shared requests, fetches and failures since the worker started. The `client-render-errors` group counts empty reports from the browser’s error boundaries. Review `/privacy` alongside your host’s logging and retention settings before a public launch.
+
 The web build checks its browser dependency notices against the installed runtime packages and publishes them at `/licenses/THIRD_PARTY_NOTICES.txt`. The runtime container retains the Python distributions and their packaged license metadata. Data and media credits are tracked separately in [Data sources](data-sources.md).

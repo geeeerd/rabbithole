@@ -24,6 +24,7 @@ def test_concurrent_identical_requests_share_one_upstream_fetch(monkeypatch):
         assert await asyncio.gather(*(client.request(query) for _ in range(10))) == [{"search": []}] * 10
         assert await client.request(query) == {"search": []}
         assert not client.pending
+        assert client.counts == {"cache_hits": 1, "shared_requests": 9, "upstream_fetches": 1, "upstream_failures": 0}
 
     asyncio.run(run())
     assert calls == 1
@@ -46,6 +47,7 @@ def test_throttling_prevents_retries_and_new_upstream_requests(monkeypatch):
             await client.request({"action": "wbsearchentities", "search": "Turing"})
         with pytest.raises(ValueError, match="retry later"):
             await client.request({"action": "wbsearchentities", "search": "Curie"})
+        assert client.counts["upstream_failures"] == 2
 
     asyncio.run(run())
     assert calls == 1

@@ -44,3 +44,11 @@ def test_daily_discovery_uses_a_published_story_statement():
     assert daily['day'] == '2026-11-12'
     assert daily['edge'] == story['transitions'][0]['edge']
     assert [daily['source'], daily['target']] == story['entities'][:2]
+
+
+def test_topic_story_links_open_the_matching_chapter_and_only_use_subject_covers():
+    painting = client.get('/api/stories/topics/Q12418').json()
+    assert painting['cover']['url'] == '/images/Q12418.jpg'
+    assert painting['stories'] == [{'id': 'mona-lisa-to-paris', 'title': 'From the Mona Lisa to Paris', 'step': 0}]
+    museum = client.get('/api/stories/topics/Q19675').json()
+    assert museum['cover'] is None and museum['stories'][0]['step'] == 1

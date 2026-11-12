@@ -43,7 +43,7 @@ def smoke(base: str, wait: int) -> None:
                 raise
             time.sleep(0.25)
 
-    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1", "/map?entity=Q7259&saved=1", "/map/boundaries?year=2023", "/trails"):
+    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1", "/map?entity=Q7259&saved=1", "/map/boundaries?year=2023", "/profile?entity=Q12418", "/trails", "/privacy"):
         with get(route) as response:
             page = response.read().decode()
             assert "RabbitHole" in page
@@ -79,6 +79,7 @@ def smoke(base: str, wait: int) -> None:
     assert "mona-lisa-to-paris" in {card["id"] for card in stories}
     daily = api("/api/stories/daily-discovery")
     assert daily["story_id"] in {card["id"] for card in stories} and daily["edge"]["source_url"]
+    assert api("/api/stories/topics/Q12418")["cover"]["url"] == "/images/Q12418.jpg"
     for card in stories:
         story = api("/api/stories/" + card["id"])
         assert len(story["entities"]) == len(story["transitions"]) + 1

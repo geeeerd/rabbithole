@@ -1,6 +1,7 @@
 """Log process-local request totals without retaining identifiers or query strings."""
 
 from dataclasses import dataclass
+from collections.abc import Callable
 import json
 import logging
 import time
@@ -9,6 +10,7 @@ LOGGER = logging.getLogger("uvicorn.error")
 DIRECT = {
     "/api/health": "health", "/api/search": "search", "/api/graph": "graph",
     "/api/graph/links": "cross-links", "/api/graph/route": "topic-route",
+    "/api/client-errors": "client-render-errors",
 }
 ENTITY_ROUTES = {"neighbors", "timeline", "places", "background", "facts", "incoming"}
 
@@ -37,10 +39,11 @@ class Totals:
 
 
 class RequestMetrics:
-    def __init__(self, interval: float = 60):
+    def __init__(self, interval: float = 60, wikidata_totals: Callable[[], dict[str, int]] | None = None):
         self.interval = interval
         self.started = time.monotonic()
         self.totals: dict[str, Totals] = {}
+        self.wikidata_totals = wikidata_totals
 
     def record(self, path: str, status: int, elapsed_ms: float) -> None:
         totals = self.totals.setdefault(route_group(path), Totals())
@@ -57,6 +60,9 @@ class RequestMetrics:
                     "mean_ms": round(item.total_ms / item.requests, 1), "max_ms": round(item.max_ms, 1)}
             for group, item in self.totals.items()
         }
-        LOGGER.info("RabbitHole request summary %s", json.dumps({"seconds": round(now - self.started, 1), "groups": groups}))
+        summary = {"seconds": round(now - self.started, 1), "groups": groups}
+        if self.wikidata_totals is not None:
+            summary["wikidata_since_start"] = self.wikidata_totals()
+        LOGGER.info("RabbitHole request summary %s", json.dumps(summary))
         self.totals.clear()
         self.started = now

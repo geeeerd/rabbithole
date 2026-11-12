@@ -27,16 +27,19 @@ class WikimediaClient:
         self.pending: dict[str, asyncio.Task] = {}
         self.concurrency = asyncio.Semaphore(3)
         self.cooldown_until = 0.0
+        self.counts = {"cache_hits": 0, "shared_requests": 0, "upstream_fetches": 0, "upstream_failures": 0}
 
     async def request(self, params: dict) -> dict:
         key = json.dumps(params, sort_keys=True)
         cached = self.cache.get(key)
         if cached and time.monotonic() - cached[0] < CACHE_TTL:
+            self.counts["cache_hits"] += 1
             self.cache.move_to_end(key)
             return json.loads(cached[1])
 
         task = self.pending.get(key)
         if task is None:
+            self.counts["upstream_fetches"] += 1
             task = asyncio.create_task(self.fetch(key, params))
             self.pending[key] = task
 
@@ -44,9 +47,11 @@ class WikimediaClient:
                 self.pending.pop(key, None)
                 # A disconnected caller may no longer be around to read the error.
                 if not done.cancelled():
-                    done.exception()
+                    self.counts["upstream_failures"] += done.exception() is not None
 
             task.add_done_callback(release)
+        else:
+            self.counts["shared_requests"] += 1
         return await asyncio.shield(task)
 
     async def fetch(self, key: str, params: dict) -> dict:

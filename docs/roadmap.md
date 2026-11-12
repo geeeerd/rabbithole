@@ -19,10 +19,12 @@ The original product plan is preserved in `blueprint.md`.
 - [ ] Obtain independent review of the published story catalog.
 - [x] Release build: same-origin container, API and upstream limits, GitHub Actions build and smoke test.
 - [x] Render deployment blueprint and opt-in GitHub Actions health check for the hosted URL.
+- [x] Data and privacy page and aggregate operational counts for cache use, upstream failures and rendering errors.
 - [x] Contribution templates, source correction links and browser dependency notices verified at build time.
 - [ ] Public beta: hosted deployment, alerting and representative traffic tests. The release checks include a controlled local burst.
 - [x] Denser exploration with broader Wikidata statements, more connection pages, and live checks for incoming statements and links between visible topics.
 - [x] Topic facts, attributed Wikipedia background and route tracing through visible statements.
+- [x] Full topic profiles with Overview, Connections, Timeline and Explore Further tabs when records are available.
 - [x] Search loaded connections and compare shared neighbors between visible topics.
 - [x] Browser-local Saved Trails with shareable exploration links.
 - [x] TimeAtlas timeline with recorded precision, calendar and statement evidence.

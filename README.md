@@ -46,6 +46,7 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 - Discovery Stories at `/stories` offers four guided journeys, including a Louvre story, with validated statements, public-domain cover art and source links. The homepage features a daily statement from the catalog.
 - Connection Challenge at `/challenge` offers four rotating daily puzzles, themed practice collections, dated replays, server-validated moves, hints, undo and shareable results.
 - TimeAtlas at `/map/boundaries` compares the 2020 Census counties and 2023 planning regions in Connecticut using attributed Census geography.
+- **Open full topic profile** in Explore opens a bookmarkable page with facts, sourced connections, recorded dates and links to related story chapters when available.
 - Timeouts, bounded upstream concurrency, retries and a bounded one-hour in-memory cache.
 - A real Wikidata snapshot around Alan Turing for offline exploration; fallback is visibly labeled.
 

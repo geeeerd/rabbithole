@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from .knowledge import SEEDS, Entity, Edge, extract, normalize
+from .knowledge import SEEDS, Entity, Edge, extract, normalize, validate
 
 router = APIRouter(prefix="/api/stories", tags=["stories"])
 CATALOG = SEEDS.parent / "stories" / "catalog.json"
@@ -59,6 +59,17 @@ class DailyDiscovery(BaseModel):
     edge: Edge
 
 
+class StoryLink(BaseModel):
+    id: str
+    title: str
+    step: int
+
+
+class TopicStories(BaseModel):
+    cover: Media | None
+    stories: list[StoryLink]
+
+
 def validate_story(raw):
     if len(raw["entities"]) < 2 or len(raw["transitions"]) != len(raw["entities"]) - 1:
         raise ValueError("A story needs a contiguous sequence of transitions")
@@ -93,6 +104,21 @@ def daily_discovery(day: date | None = None):
     story = stories[selected_day.toordinal() % len(stories)]
     return DailyDiscovery(day=selected_day, story_id=story.id, source=story.entities[0],
                           target=story.entities[1], edge=story.transitions[0].edge)
+
+
+@router.get("/topics/{qid}", response_model=TopicStories)
+def topic_stories(qid: str):
+    validate(qid)
+    stories = []
+    cover = None
+    for story in STORIES.values():
+        step = next((index for index, entity in enumerate(story.entities) if entity.id == qid), None)
+        if step is None:
+            continue
+        stories.append(StoryLink(id=story.id, title=story.title, step=step))
+        if step == 0 and cover is None:
+            cover = story.image
+    return TopicStories(cover=cover, stories=stories)
 
 
 @router.get("/{story_id}", response_model=Story)

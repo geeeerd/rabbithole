@@ -13,7 +13,7 @@ def test_built_pages_and_api_are_served_without_route_fallbacks(tmp_path):
     (tmp_path / "index.html").write_text("<html><title>RabbitHole</title></html>")
     (tmp_path / "assets" / "main-hash.js").write_text("export {};")
     with TestClient(create_production_app(tmp_path)) as client:
-        for path in ("/", "/stories?story=curie-and-paris&step=1", "/challenge", "/timeline?entity=Q7251", "/map?entity=Q7251", "/map/boundaries?year=2023", "/trails"):
+        for path in ("/", "/stories?story=curie-and-paris&step=1", "/challenge", "/timeline?entity=Q7251", "/map?entity=Q7251", "/map/boundaries?year=2023", "/profile?entity=Q12418", "/trails", "/privacy"):
             page = client.get(path)
             assert page.status_code == 200
             assert "RabbitHole" in page.text
@@ -24,6 +24,7 @@ def test_built_pages_and_api_are_served_without_route_fallbacks(tmp_path):
         assert client.get("/api/health").json()["status"] == "ok"
         assert client.get("/api/challenges/daily").headers["cache-control"] == "no-store"
         assert client.get("/api/nonexistent").status_code == 404
+        assert client.post("/api/client-errors").status_code == 204
 
 
 def test_rate_limit_ignores_untrusted_forwarded_headers():
@@ -49,10 +50,11 @@ def test_limit_enforces_body_size_and_replays_valid_game_requests():
 def test_request_summary_reports_aggregates_without_recording_raw_paths(caplog):
     from app.metrics import RequestMetrics
 
-    metrics = RequestMetrics(interval=0)
+    metrics = RequestMetrics(interval=0, wikidata_totals=lambda: {"cache_hits": 5})
     with caplog.at_level('INFO', logger='uvicorn.error'):
         metrics.record('/api/entities/Q7251/background', 429, 3.2)
         metrics.record('/api/unrecognized/private-input', 500, 12.5)
     assert '"background"' in caplog.text and '"limited": 1' in caplog.text
     assert '"server_errors": 1' in caplog.text
+    assert '"wikidata_since_start": {"cache_hits": 5}' in caplog.text
     assert 'Q7251' not in caplog.text and 'private-input' not in caplog.text

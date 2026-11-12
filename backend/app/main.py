@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Annotated, Literal
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 
 from .articles import Article, wikipedia_intro
 from .challenges import router as challenge_router
@@ -56,6 +56,11 @@ async def entities(ids, *, include_claims=True):
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.post("/api/client-errors", status_code=204)
+async def client_error():
+    return Response(status_code=204)
 
 @app.get("/api/search")
 async def search(q: str = Query(min_length=2, max_length=100)):

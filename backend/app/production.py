@@ -11,11 +11,11 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from .limits import ApiLimits
-from .main import app as api
+from .main import app as api, wikidata
 from .metrics import RequestMetrics
 
 DEFAULT_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline", "/map", "/map/boundaries", "/trails")
+PAGE_ROUTES = ("/", "/stories", "/challenge", "/timeline", "/map", "/map/boundaries", "/profile", "/trails", "/privacy")
 SECURITY_HEADERS = (
     (b"x-content-type-options", b"nosniff"),
     (b"referrer-policy", b"no-referrer"),
@@ -45,7 +45,7 @@ def create_production_app(dist: Path, *, limits: bool = True) -> ASGIApp:
         web.add_api_route(route, page, methods=["GET", "HEAD"], include_in_schema=False)
 
     protected_api = ApiLimits(api) if limits else api
-    metrics = RequestMetrics()
+    metrics = RequestMetrics(wikidata_totals=lambda: dict(wikidata.counts))
 
     async def dispatch(scope: Scope, receive: Receive, send: Send) -> None:
         path = scope.get("path", "")
