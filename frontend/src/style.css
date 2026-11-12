@@ -63,4 +63,9 @@
 .explore-searches p{font-size:12px;color:var(--muted);line-height:1.5;margin:6px 0 12px}
 .explore-searches .searchwrap{margin:0;width:100%;max-width:none}
 .find-connection .trace-route{margin-bottom:0}
+.connection-result-heading,.connection-result-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.connection-result-heading{justify-content:space-between}
+.connection-result-heading h3{margin:0;overflow-wrap:anywhere}
+.connection-result-heading button,.connection-result-actions{font-size:12px}
+.connection-result-actions a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 @media(max-width:700px){.explore-searches{grid-template-columns:1fr}}

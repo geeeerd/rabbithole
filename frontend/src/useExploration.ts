@@ -217,6 +217,11 @@ export function useExploration(enabled = true) {
     const next = { ...current.current, trail: { ...current.current.trail, selected, filter } };
     commit(next, false);
   }
+  function setConnectionTarget(target?: string) {
+    const previous = current.current;
+    if (!previous || busy || target === previous.trail.root || target === previous.trail.target) return;
+    commit({ ...previous, trail: { ...previous.trail, target } }, true);
+  }
   function collapse(id: string) {
     const previous = current.current;
     if (!previous || id === previous.trail.root) return;
@@ -232,7 +237,7 @@ export function useExploration(enabled = true) {
   const checkedTopics = new Set(scans.flatMap(scan => scan.scanned_ids)).size;
   const canLoadLinks = !!graph && graph.nodes.length >= 2 && scans.length < MAX_LINK_SCANS
     && nextSources(graph.nodes.map(node => node.id), scans).length > 0;
-  return { graph, selected, snapshot, busy, error, setError, loadLinks, checkedTopics, canLoadLinks, retry: () => retryAction?.(), explore, loadMore, loadIncoming, home, collapse,
+  return { graph, selected, snapshot, busy, error, setError, loadLinks, checkedTopics, canLoadLinks, retry: () => retryAction?.(), explore, loadMore, loadIncoming, home, collapse, setConnectionTarget,
     filter: snapshot?.trail.filter || 'all',
     setSelected: (entity: Entity | null) => { if (entity && snapshot) updateView(entity.id, snapshot.trail.filter); },
     setFilter: (filter: string) => { if (snapshot) updateView(snapshot.trail.selected, filter); },

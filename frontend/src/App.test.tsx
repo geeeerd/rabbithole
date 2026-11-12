@@ -130,7 +130,7 @@ it('browses a category and opens the selected starting topic in the explorer', a
   expect(location.search).toBe('?entity=Q11292');
 });
 
-it('finds a connection to a searched destination without replacing the explorer', async () => {
+it('finds, saves and reopens a connection to a topic outside the starting graph', async () => {
   const destination = { id: 'Q35794', label: 'University of Cambridge', description: '', source_url: '' };
   vi.mocked(fetch).mockImplementation(async url => ({
     ok: true, json: async () => String(url).startsWith('/api/search') ? { results: [destination] }
@@ -140,7 +140,7 @@ it('finds a connection to a searched destination without replacing the explorer'
       } : a,
   }) as Response);
   history.replaceState(null, '', '/?entity=Q7251');
-  render(<App/>);
+  const explorer = render(<App/>);
   const search = await screen.findByRole('combobox', { name: 'Search for a destination topic' });
   search.focus();
   fireEvent.change(search, { target: { value: 'Cambridge' } });
@@ -148,5 +148,22 @@ it('finds a connection to a searched destination without replacing the explorer'
   await screen.findByText('2 connections found in the checked neighborhood.');
   expect(screen.getAllByRole('link', { name: 'Source statement ↗' })).toHaveLength(2);
   expect(screen.getByRole('combobox', { name: 'Search another Wikidata topic' })).toBeTruthy();
+  expect(location.search).toBe('?entity=Q7251&target=Q35794');
+  expect(screen.getByRole('link', { name: /Swap topics/ }).getAttribute('href')).toBe('/?entity=Q35794&target=Q7251');
+  fireEvent.click(screen.getByRole('button', { name: 'Save trail' }));
+  explorer.unmount();
+
+  history.replaceState(null, '', '/trails');
+  const saved = render(<App/>);
+  const query = screen.getByRole('link', { name: 'Alan Turing → University of Cambridge' }).getAttribute('href');
+  expect(query).toBe('/?entity=Q7251&target=Q35794');
+  saved.unmount();
+
+  history.replaceState(null, '', query!);
+  render(<App/>);
+  await screen.findByText('2 connections found in the checked neighborhood.');
+  expect(screen.getByRole('heading', { name: 'Alan Turing → University of Cambridge' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Clear destination' }));
   expect(location.search).toBe('?entity=Q7251');
+  expect(screen.queryByText('2 connections found in the checked neighborhood.')).toBeNull();
 });

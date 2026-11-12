@@ -2,7 +2,7 @@ import React, {lazy, Suspense, useEffect, useMemo, useRef, useState} from 'react
 import {ArrowUpRight, ArrowLeft, Plus, Minus, Share2, X, Compass, ChevronRight, Sun, Moon} from 'lucide-react';
 import './style.css';
 import { MAX_INCOMING_PAGES, pageCount, trailUrl } from './exploration';
-import type { Edge } from './exploration';
+import type { Edge, Entity } from './exploration';
 import { useExploration } from './useExploration';
 const Challenge = lazy(()=>import('./Challenge').then(m=>({default:m.Challenge})));
 const Stories = lazy(()=>import('./Stories').then(m=>({default:m.Stories})));
@@ -28,8 +28,11 @@ export default function App(){
  const saved = location.pathname === '/trails';
  const exploring = !challenge && !stories && !timeline && !map && !saved;
  const savedTrails = useSavedTrails();
- const {graph,selected,snapshot,busy,error,setError,retry,explore,loadMore,loadIncoming,loadLinks,checkedTopics,canLoadLinks,home,collapse,filter,setFilter,setSelected,canBack,canForward}=useExploration(exploring);
+ const {graph,selected,snapshot,busy,error,setError,retry,explore,loadMore,loadIncoming,loadLinks,checkedTopics,canLoadLinks,home,collapse,filter,setFilter,setSelected,canBack,canForward,setConnectionTarget}=useExploration(exploring);
  const [edge,setEdge]=useState<Edge|null>(null),[notice,setNotice]=useState(''),[light,setLight]=useState(()=>{try{return localStorage.getItem('rabbithole-theme')==='light'}catch{return false}});
+ const [knownDestination, setKnownDestination] = useState<Entity>();
+ const connectionTarget = snapshot?.trail.target;
+ const destination = knownDestination?.id === connectionTarget ? knownDestination : graph?.nodes.find(node => node.id === connectionTarget);
  const evidenceHeading = useRef<HTMLHeadingElement>(null);
  useEffect(() => { if (edge) evidenceHeading.current?.focus(); }, [edge]);
  const [trace,setTrace]=useState(false),[arrowsOnly,setArrowsOnly]=useState(false);
@@ -48,8 +51,10 @@ export default function App(){
  function saveTrail() {
    if (!snapshot || !graph) return;
    const root = graph.nodes.find(node => node.id === graph.root_id);
-   const title = selected && selected.id !== root?.id
-     ? `${root?.label ?? graph.root_id} → ${selected.label}` : root?.label ?? graph.root_id;
+   const rootLabel = root?.label ?? graph.root_id;
+   const endLabel = connectionTarget ? destination?.label ?? connectionTarget
+     : selected && selected.id !== root?.id ? selected.label : undefined;
+   const title = endLabel ? `${rootLabel} → ${endLabel}` : rootLabel;
    setNotice(savedTrails.save({ query: trailUrl(snapshot.trail), title, topics: graph.nodes.length }));
  }
  const topics=[['01','Alan Turing','Q7251','PEOPLE & IDEAS'],['02','Black holes','Q589','SPACE & SCIENCE'],['03','The Silk Road','Q36288','HISTORY & CULTURE']];
@@ -60,7 +65,8 @@ export default function App(){
      <p>Start a new graph from a different topic.</p>
      <SearchBox key={graph.root_id} onSelect={id=>explore(id)} placeholder="Follow another thread…" label="Search another Wikidata topic"/>
    </section>
-   {rootTopic&&<FindConnection key={rootTopic.id} graph={graph} start={rootTopic}/>}
+   {rootTopic&&<FindConnection key={rootTopic.id} graph={graph} start={rootTopic} target={connectionTarget}
+     destination={destination} disabled={busy} onTargetChange={setConnectionTarget} onDestination={setKnownDestination}/>}
  </div><div className="trailbar" aria-label="Expanded branches"><span>YOUR TRAIL</span><button onClick={()=>{setSelected(graph.nodes.find(n=>n.id===graph.root_id)||null);setEdge(null)}}>{graph.nodes.find(n=>n.id===graph.root_id)?.label}</button>{snapshot?.trail.expanded.map(id=><div className="branchchip" key={id}><button onClick={()=>{setSelected(graph.nodes.find(n=>n.id===id)||null);setEdge(null)}}>{graph.nodes.find(n=>n.id===id)?.label}</button><button disabled={busy} aria-label={"Collapse "+graph.nodes.find(n=>n.id===id)?.label} onClick={()=>collapse(id)}><X size={13}/></button></div>)}</div><div className="graphlayout"><ErrorBoundary graph><Suspense fallback={<div className="grapharea" role="status">Loading the graph. Topic and connection lists are available beside it.</div>}><GraphCanvas graph={graph} filter={filter} light={light} selectedId={selected?.id} routeIds={routeIds} onSelect={node=>{setSelected(node);setEdge(null)}} onInspect={setEdge} onReset={()=>explore(graph.root_id)}/></Suspense></ErrorBoundary><aside aria-label="Entity profile and connections">{edge?<><div className="eyebrow">RELATIONSHIP EVIDENCE</div><h2 ref={evidenceHeading} tabIndex={-1}>{edge.label}</h2><p>{graph.nodes.find(n=>n.id===edge.source)?.label} → {graph.nodes.find(n=>n.id===edge.target)?.label}</p><div className="sourcebox"><strong>{graph.saved_edge_ids?.includes(edge.id)?'Saved Wikidata statement':'Wikidata'} · {edge.property_id}</strong><p>{edge.references.length?`${edge.references.length} source reference(s) recorded. Review the original statement.`:'No supporting references recorded. This is a Wikidata assertion, not independently verified research.'}</p><a href={edge.source_url} target="_blank" rel="noreferrer">Inspect original statement ↗</a><a className="source-report" href="https://github.com/geeeerd/rabbithole/issues/new?template=source-correction.yml" target="_blank" rel="noreferrer">Report a source issue ↗</a><details><summary>Statement details</summary><pre>{JSON.stringify({id:edge.id,qualifiers:edge.qualifiers,references:edge.references},null,2)}</pre></details></div><button className="primary" onClick={()=>setEdge(null)}>Back to topic</button></>:selected?<><div className="eyebrow">TOPIC PROFILE <span>{selected.id}</span></div><div className="profileicon">◎</div><h2>{selected.label}</h2><p>{selected.description}</p><div className="profileactions">{selected.id===graph.root_id?<span className="branchhint">Starting topic · connections shown</span>:snapshot?.trail.expanded.includes(selected.id)?<button className="primary" disabled={busy} onClick={()=>collapse(selected.id)}>Collapse branch <Minus size={15}/></button>:<button className="primary" disabled={busy} onClick={()=>void explore(selected.id,true)}>Expand connections <Plus size={15}/></button>}{selected.id!==graph.root_id&&snapshot?.bundles[selected.id]?.next_offset!=null&&<button disabled={busy} onClick={()=>loadMore(selected.id)}><Plus size={15}/> More connections for this topic</button>}{canLoadIncoming&&<button disabled={busy} onClick={()=>loadIncoming(selected.id)}>
    {incomingChecked===undefined?'Find incoming connections':'Check more incoming topics'}
  </button>}<button onClick={()=>void explore(selected.id)}>Recenter here <Compass size={15}/></button>{selected.id!==graph.root_id&&<button aria-pressed={trace} onClick={()=>setTrace(!trace)}>{trace?'Clear traced route':'Trace route from starting topic'}</button>}</div>{incomingChecked!==undefined&&<p className="branchhint" role="status">

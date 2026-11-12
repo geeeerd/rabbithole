@@ -2,8 +2,8 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { ArrowUpRight, Search } from 'lucide-react';
 import type { Entity } from './exploration';
 
-export function SearchBox({ onSelect, placeholder = 'Start with anything…', label = 'Search Wikidata topics', inputId = 'search' }: {
-  onSelect: (id: string, entity: Entity) => void; placeholder?: string; label?: string; inputId?: string;
+export function SearchBox({ onSelect, placeholder = 'Start with anything…', label = 'Search Wikidata topics', inputId = 'search', disabled = false }: {
+  onSelect: (id: string, entity: Entity) => void; placeholder?: string; label?: string; inputId?: string; disabled?: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Entity[]>([]);
@@ -17,7 +17,7 @@ export function SearchBox({ onSelect, placeholder = 'Start with anything…', la
   const statusId = useId();
   useEffect(() => {
     setResults([]); setActive(-1); setFailed(false);
-    if (query.trim().length < 2) { setStatus(''); setOpen(false); return; }
+    if (disabled || query.trim().length < 2) { setStatus(''); setOpen(false); return; }
     const controller = new AbortController();
     setStatus('Searching…');
     const timer = setTimeout(async () => {
@@ -40,12 +40,13 @@ export function SearchBox({ onSelect, placeholder = 'Start with anything…', la
       }
     }, 300);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [query, attempt]);
+  }, [query, attempt, disabled]);
 
   function choose(entity: Entity) {
+    if (disabled) return;
     setQuery(''); setResults([]); setOpen(false); setStatus(''); onSelect(entity.id, entity);
   }
-  return <div className="searchbox"><div className="searchwrap"><Search size={20} aria-hidden="true"/><input ref={input} id={inputId} role="combobox" aria-autocomplete="list" aria-expanded={open && results.length > 0} aria-controls={listId} aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined} aria-describedby={statusId} aria-label={label} placeholder={placeholder} maxLength={100} autoComplete="off" value={query} onFocus={() => { if (results.length) setOpen(true); }} onBlur={() => setOpen(false)} onChange={e => { setQuery(e.target.value); setResults([]); setActive(-1); }} onKeyDown={e => {
+  return <div className="searchbox"><div className="searchwrap"><Search size={20} aria-hidden="true"/><input ref={input} id={inputId} disabled={disabled} role="combobox" aria-autocomplete="list" aria-expanded={open && results.length > 0} aria-controls={listId} aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined} aria-describedby={statusId} aria-label={label} placeholder={placeholder} maxLength={100} autoComplete="off" value={query} onFocus={() => { if (results.length) setOpen(true); }} onBlur={() => setOpen(false)} onChange={e => { setQuery(e.target.value); setResults([]); setActive(-1); }} onKeyDown={e => {
     if (e.key === 'Escape') { setOpen(false); setActive(-1); return; }
     if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && results.length) {
       e.preventDefault(); setOpen(true);

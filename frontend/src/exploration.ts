@@ -1,7 +1,7 @@
 export type Entity = { id: string; label: string; description: string; source_url: string };
 export type Edge = { id: string; source: string; target: string; label: string; property_id: string; references: unknown[]; qualifiers: Record<string, unknown>; source_url: string };
 export type Graph = { nodes: Entity[]; edges: Edge[]; root_id: string; offline: boolean; truncated: boolean; fetched_at: string; next_offset?: number | null; total_statements?: number | null; saved_edge_ids?: string[]; incoming_cursor?: string | null; incoming_checked?: number };
-export type Trail = { root: string; expanded: string[]; selected: string; filter: string; pages?: Record<string, number>; incoming?: Record<string, number>; linkScans?: number };
+export type Trail = { root: string; expanded: string[]; selected: string; filter: string; target?: string; pages?: Record<string, number>; incoming?: Record<string, number>; linkScans?: number };
 export type IncomingPage = { nodes: Entity[]; edges: Edge[]; fetched_at: string; next_cursor: string | null; checked: number };
 export type LinkScan = { edges: Edge[]; scanned_ids: string[]; saved_edge_ids: string[]; offline: boolean; truncated: boolean; fetched_at: string };
 export type Snapshot = { trail: Trail; bundles: Record<string, Graph>; links?: LinkScan[] };
@@ -38,8 +38,10 @@ export function readTrail(search: string): Trail | null {
   const expanded = [...new Set((params.get('expand') || '').split(',').filter(Boolean))];
   if (expanded.length > MAX_BRANCHES || expanded.some(id => !validId(id))) throw new Error('This exploration link has too many branches or an invalid topic.');
   const selected = params.get('selected') || root;
+  const target = params.get('target');
   const filter = params.get('filter') || 'all';
   if (!validId(selected) || (filter !== 'all' && !/^P[1-9][0-9]*$/.test(filter))) throw new Error('This exploration link has invalid view settings.');
+  if (target !== null && (!validId(target) || target === root)) throw new Error('This exploration link has an invalid destination topic.');
   const pages = readCounts(params.get('pages'), [root, ...expanded], MAX_EXTRA_PAGES);
   const incoming = readCounts(params.get('incoming'), [root, ...expanded], MAX_INCOMING_PAGES);
   const linkScans = Number(params.get('links') ?? 0);
@@ -47,13 +49,14 @@ export function readTrail(search: string): Trail | null {
     throw new Error('This exploration link has too many cross-link checks.');
   }
   return { root, expanded: expanded.filter(id => id !== root), selected, filter,
-    ...(pages ? { pages } : {}), ...(incoming ? { incoming } : {}), ...(linkScans ? { linkScans } : {}) };
+    ...(target ? { target } : {}), ...(pages ? { pages } : {}), ...(incoming ? { incoming } : {}), ...(linkScans ? { linkScans } : {}) };
 }
 
 export function trailUrl(trail: Trail): string {
   const params = new URLSearchParams({ entity: trail.root });
   if (trail.expanded.length) params.set('expand', trail.expanded.join(','));
   if (trail.selected !== trail.root) params.set('selected', trail.selected);
+  if (trail.target) params.set('target', trail.target);
   if (trail.filter !== 'all') params.set('filter', trail.filter);
   for (const key of ['pages', 'incoming'] as const) {
     const counts = Object.entries(trail[key] ?? {}).map(([id, count]) => `${id}:${count}`);
