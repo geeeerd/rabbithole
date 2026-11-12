@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Edge, Entity, Graph } from './exploration';
 import { visibleRoute, type RouteStep } from './pathfinding';
 import { SearchBox } from './SearchBox';
-import { RouteSteps } from './TraceRoute';
 
 type RouteResponse = {
   nodes: Entity[];
@@ -14,6 +13,27 @@ type RouteResponse = {
 
 type Result = { nodes: Entity[]; steps: RouteStep[]; savedIds?: string[]; checked?: number; partial?: boolean };
 type Lookup = { target: string; result: Result } | { target: string; error: string };
+
+function ConnectionPath({ result, start }: { result: Result; start: Entity }) {
+  const labels = new Map(result.nodes.map(node => [node.id, node.label]));
+  const name = (id: string) => labels.get(id) ?? id;
+  return <ol className="connection-path" role="list" aria-label="Connection path">
+    <li><a className="connection-path-topic" href={`/?entity=${start.id}`}>{start.label}</a></li>
+    {result.steps.map(step => <li key={step.edge.id}>
+      <div className="connection-path-edge">
+        <span className="connection-path-arrow" aria-hidden="true">{step.reversed ? '↑' : '↓'}</span>
+        <div>
+          <strong>{step.edge.label}</strong>
+          <span>{name(step.edge.source)} → {name(step.edge.target)}</span>
+          {step.reversed && <span>Traversed against the statement arrow</span>}
+          {result.savedIds?.includes(step.edge.id) && <span>Saved Wikidata statement</span>}
+          <a href={step.edge.source_url} target="_blank" rel="noreferrer">Source statement ↗</a>
+        </div>
+      </div>
+      <a className="connection-path-topic" href={`/?entity=${step.to}`}>{name(step.to)}</a>
+    </li>)}
+  </ol>;
+}
 
 export function FindConnection({ graph, start, target, destination, disabled, onTargetChange, onDestination }: {
   graph: Graph;
@@ -66,7 +86,13 @@ export function FindConnection({ graph, start, target, destination, disabled, on
   const result: Result | null = loaded ? { nodes: graph.nodes, steps: loaded, savedIds: graph.saved_edge_ids }
     : currentLookup && 'result' in currentLookup ? currentLookup.result : null;
   const error = !loaded && currentLookup && 'error' in currentLookup ? currentLookup.error : '';
-  const label = destination?.id === target ? destination?.label : graph.nodes.find(node => node.id === target)?.label;
+  const label = destination?.label ?? target;
+
+  function clear() {
+    setSameTopic(false);
+    onTargetChange();
+    document.getElementById('connection-target')?.focus();
+  }
 
   return <section className="find-connection" aria-labelledby="find-connection-title">
     <h3 id="find-connection-title">Find a connection</h3>
@@ -76,8 +102,8 @@ export function FindConnection({ graph, start, target, destination, disabled, on
     {sameTopic && <p role="alert">Choose a topic other than the starting topic.</p>}
     {target && <div className="trace-route">
       <div className="connection-result-heading">
-        <h3>{start.label} → {label ?? target}</h3>
-        <button disabled={disabled} onClick={() => { setSameTopic(false); onTargetChange(); }}>Clear destination</button>
+        <h3>{start.label} → {label}</h3>
+        <button disabled={disabled} onClick={clear}>Clear destination</button>
       </div>
       {!result && !error && <p role="status">Checking nearby Wikidata topics…</p>}
       {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(count => count + 1)}>Retry connection search</button></div>}
@@ -86,9 +112,9 @@ export function FindConnection({ graph, start, target, destination, disabled, on
           ? `${result.steps.length} ${result.steps.length === 1 ? 'connection' : 'connections'} found ${result.checked === undefined ? 'in this trail' : 'in the checked neighborhood'}.`
           : 'No route found in the checked neighborhood.'}</p>
         {result.checked !== undefined && <p>Checked {result.checked} topic records for routes of up to three connections.{result.partial && ' Some live records were unavailable.'}</p>}
-        {result.steps.length > 0 && <RouteSteps nodes={result.nodes} steps={result.steps} savedIds={result.savedIds}/>}
+        {result.steps.length > 0 && <ConnectionPath result={result} start={start}/>}
         <div className="connection-result-actions">
-          <a href={`/?entity=${target}`}>Explore destination ↗</a>
+          {result.steps.length === 0 && <a href={`/?entity=${target}`}>Explore destination ↗</a>}
           <a href={`/?entity=${target}&target=${start.id}`}>Swap topics ↔</a>
         </div>
       </>}

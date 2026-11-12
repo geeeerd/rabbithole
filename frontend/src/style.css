@@ -68,4 +68,10 @@
 .connection-result-heading h3{margin:0;overflow-wrap:anywhere}
 .connection-result-heading button,.connection-result-actions{font-size:12px}
 .connection-result-actions a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.find-connection .connection-path{list-style:none;padding:0;margin:12px 0}
+.connection-path-topic{display:inline-flex;max-width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-weight:700;overflow-wrap:anywhere}
+.connection-path-edge{display:flex;gap:10px;align-items:center;margin-inline-start:12px;padding:7px 8px;border-inline-start:2px solid var(--accent);overflow-wrap:anywhere}
+.connection-path-edge .connection-path-arrow{font-size:19px;color:var(--accent);margin:0}
+.connection-path-edge a{display:inline-block;margin-top:4px;text-decoration:underline;text-underline-offset:3px}
+.find-connection .connection-path li{margin:0}
 @media(max-width:700px){.explore-searches{grid-template-columns:1fr}}

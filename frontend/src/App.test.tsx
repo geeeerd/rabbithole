@@ -147,6 +147,8 @@ it('finds, saves and reopens a connection to a topic outside the starting graph'
   fireEvent.click(await screen.findByRole('option', { name: 'University of Cambridge' }));
   await screen.findByText('2 connections found in the checked neighborhood.');
   expect(screen.getAllByRole('link', { name: 'Source statement ↗' })).toHaveLength(2);
+  const path = screen.getByRole('list', { name: 'Connection path' });
+  expect(within(path).getByRole('link', { name: "King's College" }).getAttribute('href')).toBe('/?entity=Q924289');
   expect(screen.getByRole('combobox', { name: 'Search another Wikidata topic' })).toBeTruthy();
   expect(location.search).toBe('?entity=Q7251&target=Q35794');
   expect(screen.getByRole('link', { name: /Swap topics/ }).getAttribute('href')).toBe('/?entity=Q35794&target=Q7251');
