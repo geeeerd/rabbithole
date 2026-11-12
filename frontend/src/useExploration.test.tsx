@@ -63,11 +63,11 @@ it('opens reachable branches from a stale shared link and retries the original l
   render(<Harness/>);
   await waitFor(() => expect(screen.getByTestId('error').textContent).toContain('no longer reachable'));
   expect(screen.getByTestId('nodes').textContent).toBe('Q1,Q2');
-  expect(new URLSearchParams(location.search).get('expand')).toBe('Q2');
+  await waitFor(() => expect(new URLSearchParams(location.search).get('expand')).toBe('Q2'));
   changed = true;
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   await waitFor(() => expect(screen.getByTestId('selected').textContent).toBe('Q4'));
-  expect(new URLSearchParams(location.search).get('expand')).toBe('Q2,Q3');
+  await waitFor(() => expect(new URLSearchParams(location.search).get('expand')).toBe('Q2,Q3'));
 });
 it('restores session history from saved data without upstream calls',async()=>{
   render(<Harness/>);

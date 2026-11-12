@@ -28,6 +28,8 @@ GRAPH_LABELS = {
 TopicId = Annotated[str, Field(pattern=r"^Q[1-9][0-9]{0,11}$")]
 LINK_SOURCE_LIMIT = 8
 LINK_EDGE_LIMIT = 48
+ROUTE_CANDIDATES_PER_TOPIC = 8
+ROUTE_MAX_STEPS = 3
 
 
 class LinkRequest(BaseModel):
@@ -50,6 +52,56 @@ class IncomingPage(BaseModel):
     next_cursor: str | None
     checked: int
     fetched_at: str
+
+
+class RouteStep(BaseModel):
+    from_id: str
+    to_id: str
+    edge: Edge
+    reversed: bool
+
+
+class TopicRoute(BaseModel):
+    nodes: list[Entity]
+    steps: list[RouteStep]
+    checked: int
+    saved_edge_ids: list[str]
+    partial: bool
+
+
+def find_route(edges: list[Edge], start: str, target: str) -> list[RouteStep]:
+    neighbors = defaultdict(list)
+    for edge in edges:
+        neighbors[edge.source].append((edge.target, edge, False))
+        neighbors[edge.target].append((edge.source, edge, True))
+    queue = deque([(start, [])])
+    visited = {start}
+    while queue:
+        current, steps = queue.popleft()
+        if current == target:
+            return steps
+        if len(steps) >= ROUTE_MAX_STEPS:
+            continue
+        for neighbor, edge, reversed_arrow in neighbors[current]:
+            if neighbor in visited:
+                continue
+            visited.add(neighbor)
+            queue.append((neighbor, [*steps, RouteStep(from_id=current, to_id=neighbor, edge=edge,
+                                                       reversed=reversed_arrow)]))
+    return []
+
+
+def route_candidates(edges: list[Edge], start: str, target: str) -> list[str]:
+    candidates = {}
+    for endpoint in (start, target):
+        neighbors = dict.fromkeys(
+            edge.target if edge.source == endpoint else edge.source
+            for edge in edges if endpoint in (edge.source, edge.target)
+        )
+        neighbors.pop(start, None)
+        neighbors.pop(target, None)
+        candidates.update(dict.fromkeys(list(neighbors)[:ROUTE_CANDIDATES_PER_TOPIC]))
+    return list(candidates)
 
 
 def graph_statements(item: dict) -> list[Edge]:

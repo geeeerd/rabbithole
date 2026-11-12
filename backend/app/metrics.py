@@ -8,7 +8,7 @@ import time
 LOGGER = logging.getLogger("uvicorn.error")
 DIRECT = {
     "/api/health": "health", "/api/search": "search", "/api/graph": "graph",
-    "/api/graph/links": "cross-links",
+    "/api/graph/links": "cross-links", "/api/graph/route": "topic-route",
 }
 ENTITY_ROUTES = {"neighbors", "timeline", "places", "background", "facts", "incoming"}
 

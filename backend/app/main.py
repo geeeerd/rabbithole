@@ -10,7 +10,7 @@ from .articles import Article, wikipedia_intro
 from .challenges import router as challenge_router
 from .connections import (
     GRAPH_LABELS, ITEM_ID, LINK_EDGE_LIMIT, LINK_SOURCE_LIMIT, PAGE_SIZE, IncomingPage, LinkRequest, LinkScan,
-    graph_statements, saved_links, varied_order,
+    TopicRoute, find_route, graph_statements, route_candidates, saved_links, varied_order,
 )
 from .facts import FACT_PAGE_SIZE, LABELS as FACT_LABELS, FactPage, recorded_facts
 from .geography import Place, Places, coordinate, place_links, relationship_dates, saved_places
@@ -277,6 +277,60 @@ async def resolve_property_labels(edges):
         if edge.property_id in metadata and metadata[edge.property_id].get("labels") else edge
         for edge in edges
     ]
+
+
+@app.get("/api/graph/route", response_model=TopicRoute)
+async def graph_route(start: str, target: str):
+    validate(start)
+    validate(target)
+    if start == target:
+        raise HTTPException(422, "Choose a different destination topic.")
+    endpoints, offline = await entities([start, target])
+    if any(key not in endpoints or "missing" in endpoints[key] for key in (start, target)):
+        raise HTTPException(503 if offline else 404, "One of these topics is unavailable.")
+
+    _, incoming = saved_links()
+    live = {} if offline else endpoints
+    saved = {edge.id: edge for key in (start, target) for edge in incoming.get(key, [])
+             if edge.source not in live}
+    statements = {edge.id: edge for item in endpoints.values() for edge in graph_statements(item)}
+    if offline:
+        saved.update(statements)
+    neighborhood = varied_order(list({**saved, **statements}.values()))
+    steps = find_route(neighborhood, start, target)
+    records = dict(endpoints)
+    partial = offline
+
+    if not steps and (candidates := route_candidates(neighborhood, start, target)):
+        fetched, fallback = await entities(candidates)
+        bridges = {key: item for key, item in fetched.items() if key in candidates and "missing" not in item}
+        records.update(bridges)
+        partial = partial or fallback
+        allowed = set(candidates) | {start, target}
+        bridge_edges = {edge.id: edge for item in bridges.values() for edge in graph_statements(item)
+                        if edge.target in allowed}
+        if fallback:
+            saved.update(bridge_edges)
+        else:
+            saved = {key: edge for key, edge in saved.items() if edge.source not in bridges}
+        steps = find_route(varied_order(list({**saved, **statements, **bridge_edges}.values())), start, target)
+
+    ids = [start, *(step.to_id for step in steps)] if steps else [start, target]
+    lookups = list(dict.fromkeys([
+        *[key for key in ids if key not in records],
+        *[step.edge.property_id for step in steps if step.edge.property_id not in GRAPH_LABELS],
+    ]))
+    checked = len(records)
+    if lookups:
+        metadata, _ = await entities(lookups, include_claims=False)
+        records.update({key: item for key, item in metadata.items() if "missing" not in item})
+    for step in steps:
+        prop = records.get(step.edge.property_id)
+        if prop and prop.get("labels"):
+            step.edge = step.edge.model_copy(update={"label": normalize(prop).label})
+    return TopicRoute(nodes=[normalize(records.get(key, {"id": key})) for key in ids], steps=steps,
+                      checked=checked, saved_edge_ids=[step.edge.id for step in steps if step.edge.id in saved],
+                      partial=partial)
 
 
 @app.post("/api/graph/links", response_model=LinkScan)

@@ -41,7 +41,7 @@ class ApiLimits:
             return
 
         path = scope["path"]
-        upstream = path in ("/api/search", "/api/graph", "/api/graph/links") or path.startswith("/api/entities/")
+        upstream = path in ("/api/search", "/api/graph", "/api/graph/links", "/api/graph/route") or path.startswith("/api/entities/")
         writing = scope["method"] == "POST"
         if upstream or writing:
             address = (scope.get("client") or ("unknown", 0))[0]
@@ -55,6 +55,8 @@ class ApiLimits:
                 cost = 4
             elif path.endswith("/incoming"):
                 cost = 5
+            elif path == "/api/graph/route":
+                cost = 6
             retry = bucket.consume(now, cost, self.capacity, self.refill)
             if not retry and upstream:
                 retry = self.upstream.consume(now, cost, 30, 2)

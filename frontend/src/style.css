@@ -57,3 +57,10 @@
 .browse-topics li a{display:flex;justify-content:space-between;align-items:center;gap:10px;height:100%;padding:15px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 .browse-topics li a:hover{color:var(--accent);border-color:var(--accent)}
 .browse-topics li svg{flex:none}
+.explore-searches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px;align-items:start}
+.explore-searches>section{padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.explore-searches h3{margin:0 0 5px;font-size:15px}
+.explore-searches p{font-size:12px;color:var(--muted);line-height:1.5;margin:6px 0 12px}
+.explore-searches .searchwrap{margin:0;width:100%;max-width:none}
+.find-connection .trace-route{margin-bottom:0}
+@media(max-width:700px){.explore-searches{grid-template-columns:1fr}}

@@ -117,3 +117,31 @@ def test_incoming_candidates_become_edges_only_after_statement_verification(monk
     assert all(edge['source'] == 'Q924289' and edge['target'] == 'Q35794' for edge in page['edges'])
     more = client.get('/api/entities/Q35794/incoming', params={'cursor': page['next_cursor']}).json()
     assert more['next_cursor'] is None and not more['edges']
+
+
+def test_route_search_uses_bounded_bridge_records_and_preserves_arrows(monkeypatch):
+    def item(qid, targets):
+        return {'id': qid, 'claims': {'P69': [
+            {'id': f'{qid}${target}', 'mainsnak': {'snaktype': 'value', 'datavalue': {'value': {'id': target}}}}
+            for target in targets
+        ]}}
+
+    records = {'Q1': item('Q1', ['Q2']), 'Q2': item('Q2', ['Q3']),
+               'Q3': item('Q3', []), 'Q4': item('Q4', ['Q3']), 'Q5': item('Q5', [])}
+    requests = []
+
+    async def fixture_request(params):
+        ids = params['ids'].split('|')
+        requests.append(ids)
+        return {'entities': {key: records[key] for key in ids}}
+
+    monkeypatch.setattr(main, 'request', fixture_request)
+    monkeypatch.setattr(main, 'saved_links', lambda: (set(), {}))
+    route = client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q4'}).json()
+    assert requests == [['Q1', 'Q4'], ['Q2', 'Q3']]
+    assert [node['id'] for node in route['nodes']] == ['Q1', 'Q2', 'Q3', 'Q4']
+    assert route['checked'] == 4
+    assert [step['reversed'] for step in route['steps']] == [False, False, True]
+    assert route['steps'][-1]['edge']['source'] == 'Q4'
+    assert not client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q5'}).json()['steps']
+    assert client.get('/api/graph/route', params={'start': 'Q1', 'target': 'Q1'}).status_code == 422

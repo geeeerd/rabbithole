@@ -13,7 +13,7 @@ it('supports combobox arrow navigation, Enter selection and Escape dismissal',as
  fireEvent.keyDown(input,{key:'ArrowDown'});fireEvent.keyDown(input,{key:'ArrowDown'});
  expect(screen.getByRole('option',{name:/Ada Lovelace/}).getAttribute('aria-selected')).toBe('true');
  fireEvent.keyDown(input,{key:'Enter'});
- expect(choose).toHaveBeenCalledWith('Q7259');
+ expect(choose).toHaveBeenCalledWith('Q7259', results[1]);
  expect((input as HTMLInputElement).value).toBe('');
  fireEvent.change(input,{target:{value:'Alan'}});await screen.findByRole('option',{name:/Alan Turing/});
  fireEvent.keyDown(input,{key:'Escape'});fireEvent.keyDown(input,{key:'Enter'});

@@ -40,6 +40,7 @@ Open `rabbithole.code-workspace` in VS Code; **Tasks → Run Task → Start Rabb
 - Save up to 30 explorations in the current browser. **Saved Trails** reopens a trail with its selected topic, branches, filter and requested connection pages using current graph data.
 - **Inspect connections** searches loaded statements by topic, relationship or Wikidata ID. Filter for arrows pointing to or from the selected topic and open any result to see its evidence.
 - **Compare topics** shows direct statements and shared neighbors between the selected topic and another one in the loaded graph, with links to the original statements.
+- **Find a connection** searches for a second topic without replacing the graph. If the loaded trail has no route, RabbitHole checks the endpoints and up to 16 candidate records for routes of up to three connections.
 - **Focus selected topic** dims unrelated parts of the graph while keeping its immediate neighbors and any traced route visible.
 - Discovery Stories at `/stories`: three guided journeys with validated statement sequences, chapter links, public-domain portraits, attribution and links into exploration.
 - Connection Challenge at `/challenge`: three rotating daily puzzles, dated replay links, themed practice pairs, server-validated moves, hints, undo, signed progress recovery, source links and shareable results.

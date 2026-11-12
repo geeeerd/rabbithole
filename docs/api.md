@@ -42,6 +42,8 @@ Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through th
 
 `GET /api/entities/Q7251/incoming` checks up to eight candidate topics from Wikidata’s backlink index. It returns up to 48 statements pointing to the requested topic, the matching source nodes and the number of candidates checked. Pass `next_cursor` as the `cursor` query parameter to continue. A page may contain zero matching statements even when it has a next cursor.
 
+`GET /api/graph/route?start=Q7251&target=Q35794` checks the endpoint records, saved incoming statements and, if needed, up to eight candidate neighbors per endpoint. It returns a route of up to three connections in the checked neighborhood. Steps preserve statement direction and report when traversal goes against the arrow. An empty `steps` array means the checked records yielded no route. `saved_edge_ids` marks bundled statements, and `partial` indicates a live record lookup fell back to saved data.
+
 `GET /api/entities/Q7251/places` returns the topic’s recorded Earth coordinate when available and up to eight related places with usable coordinates. Each point includes precision, the coordinate statement, related place links and supported date qualifiers. `?offline=true` reads the saved coordinates and relationships without live requests.
 
 `GET /api/entities/Q7251/background` returns the introductory excerpt for the linked English Wikipedia article along with article, revision, contributor history and license URLs. A topic without a linked article or usable excerpt returns 404. An upstream outage returns 503.

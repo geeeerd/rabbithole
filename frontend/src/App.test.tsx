@@ -129,3 +129,24 @@ it('browses a category and opens the selected starting topic in the explorer', a
   await screen.findByRole('heading', { name: 'Coral reef' });
   expect(location.search).toBe('?entity=Q11292');
 });
+
+it('finds a connection to a searched destination without replacing the explorer', async () => {
+  const destination = { id: 'Q35794', label: 'University of Cambridge', description: '', source_url: '' };
+  vi.mocked(fetch).mockImplementation(async url => ({
+    ok: true, json: async () => String(url).startsWith('/api/search') ? { results: [destination] }
+      : String(url).startsWith('/api/graph/route') ? {
+        nodes: [...a.nodes, destination], checked: 3, saved_edge_ids: [], partial: false,
+        steps: [...a.edges, ...b.edges].map(edge => ({ from_id: edge.source, to_id: edge.target, edge, reversed: false })),
+      } : a,
+  }) as Response);
+  history.replaceState(null, '', '/?entity=Q7251');
+  render(<App/>);
+  const search = await screen.findByRole('combobox', { name: 'Search for a destination topic' });
+  search.focus();
+  fireEvent.change(search, { target: { value: 'Cambridge' } });
+  fireEvent.click(await screen.findByRole('option', { name: 'University of Cambridge' }));
+  await screen.findByText('2 connections found in the checked neighborhood.');
+  expect(screen.getAllByRole('link', { name: 'Source statement ↗' })).toHaveLength(2);
+  expect(screen.getByRole('combobox', { name: 'Search another Wikidata topic' })).toBeTruthy();
+  expect(location.search).toBe('?entity=Q7251');
+});
