@@ -174,3 +174,30 @@ it('finds, saves and reopens a connection to a topic outside the starting graph'
   expect(location.search).toBe('?entity=Q7251');
   expect(screen.queryByText('2 connections found in the checked neighborhood.')).toBeNull();
 });
+
+it('starts a two-topic search directly from the homepage', async () => {
+  vi.mocked(fetch).mockImplementation(async url => {
+    const query = new URL(String(url), location.origin).searchParams;
+    const body = query.has('q') ? { results: [query.get('q') === 'Turing' ? a.nodes[0] : a.nodes[1]] } : a;
+    return { ok: true, json: async () => body } as Response;
+  });
+  render(<App/>);
+  fireEvent.click(screen.getByRole('button', { name: 'Connect two topics' }));
+  const submit = screen.getByRole('button', { name: 'Find a connection' }) as HTMLButtonElement;
+  expect(submit.disabled).toBe(true);
+
+  const start = screen.getByRole('combobox', { name: 'Starting topic' });
+  start.focus();
+  fireEvent.change(start, { target: { value: 'Turing' } });
+  fireEvent.click(await screen.findByRole('option', { name: /Alan Turing/ }));
+  const destination = screen.getByRole('combobox', { name: 'Destination topic' });
+  destination.focus();
+  fireEvent.change(destination, { target: { value: 'College' } });
+  fireEvent.click(await screen.findByRole('option', { name: /King's College/ }));
+
+  expect(submit.disabled).toBe(false);
+  fireEvent.click(submit);
+  await screen.findByText('1 connection found in this trail.');
+  expect(location.search).toBe('?entity=Q7251&target=Q924289');
+  expect(fetch).not.toHaveBeenCalledWith(expect.stringContaining('/api/graph/route'), expect.anything());
+});

@@ -76,3 +76,4 @@ Code: MIT. Structured entity snapshots: Wikidata CC0, not independently verified
 
 See [the original blueprint](docs/blueprint.md), [architecture](docs/architecture.md), [roadmap](docs/roadmap.md) and [contribution guide](CONTRIBUTING.md).
 - **Explore by category** on the homepage offers 24 Wikidata starting topics across eight subject areas.
+- Choose **Connect two topics** on the homepage to start a connection search from a pair of topics.

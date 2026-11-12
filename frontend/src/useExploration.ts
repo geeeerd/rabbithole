@@ -85,6 +85,10 @@ export function useExploration(enabled = true) {
   }
 
   function restoreUrl(search = location.search) {
+    if (!search) {
+      commit(null, false);
+      return;
+    }
     const retry = () => restoreUrl(search);
     void run(async signal => {
       const trail = readTrail(search);
@@ -166,15 +170,15 @@ export function useExploration(enabled = true) {
     history.replaceState({ rabbitHole: true, snapshot, index: positionRef.current.index, end: positionRef.current.end }, '', snapshot ? trailUrl(snapshot.trail) : location.href);
   }, [snapshot, enabled]);
 
-  function explore(id: string, expand = false) {
+  function explore(id: string, expand = false, target?: string) {
     const previous = current.current;
     if (expand && previous && (id === previous.trail.root || previous.trail.expanded.includes(id))) return;
-    const action = () => explore(id, expand);
+    const action = () => explore(id, expand, target);
     void run(async signal => {
       if (expand && previous && previous.trail.expanded.length >= MAX_BRANCHES) throw new Error('You reached the eight-branch limit. Collapse a branch to continue.');
       const next = await fetchGraph(id, signal);
       if (expand && previous) return buildSnapshot({ ...previous.trail, selected: id, expanded: [...previous.trail.expanded, id] }, { ...previous.bundles, [id]: next });
-      return buildSnapshot({ root: id, selected: id, expanded: [], filter: 'all' }, { [id]: next });
+      return buildSnapshot({ root: id, selected: id, expanded: [], filter: 'all', target }, { [id]: next });
     }, true, action);
   }
 

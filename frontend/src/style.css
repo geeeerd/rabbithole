@@ -76,3 +76,15 @@
 .connection-path-edge a{display:inline-block;margin-top:4px;text-decoration:underline;text-underline-offset:3px}
 .find-connection .connection-path li{margin:0}
 @media(max-width:700px){.explore-searches{grid-template-columns:1fr}}
+.home-search{margin-top:24px;width:min(590px,100%);position:relative;z-index:2}
+.home-search-modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.home-search-modes button{font-size:13px;background:var(--panel)}
+.home-search-modes button[aria-pressed='true']{color:var(--accent);border-color:var(--accent)}
+.home-search .searchwrap{margin-top:0}
+.home-search .searchwrap:focus-within{z-index:7}
+.home-search-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.home-search-pair label{display:block;font-size:12px;color:var(--muted);margin:3px 0 6px}
+.home-search-pair input{min-width:0}
+.home-search-choice{display:inline-block;margin-bottom:8px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px}
+.home-search-submit:disabled{cursor:default}
+@media(max-width:550px){.home-search-pair{grid-template-columns:1fr}}
