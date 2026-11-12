@@ -224,12 +224,14 @@ export function useExploration(enabled = true) {
   function setConnectionTarget(target?: string) {
     const previous = current.current;
     if (!previous || busy || target === previous.trail.root || target === previous.trail.target) return;
-    commit({ ...previous, trail: { ...previous.trail, target, ...(!target && { arrowsOnly: undefined, deep: undefined }) } }, true);
+    commit({ ...previous, trail: { ...previous.trail, target, via: undefined,
+      ...(!target && { arrowsOnly: undefined, deep: undefined }) } }, true);
   }
   function setConnectionOptions(options: ConnectionOptions) {
     const previous = current.current;
     if (!previous?.trail.target || busy) return;
-    commit({ ...previous, trail: { ...previous.trail, ...options } }, true);
+    const modeChanged = 'arrowsOnly' in options || 'deep' in options;
+    commit({ ...previous, trail: { ...previous.trail, ...(modeChanged && { via: undefined }), ...options } }, true);
   }
   function collapse(id: string) {
     const previous = current.current;

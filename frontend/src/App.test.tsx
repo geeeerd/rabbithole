@@ -226,7 +226,7 @@ it('runs a wider search from a quick miss and keeps the deeper setting in the li
   expect(location.search).toBe('?entity=Q7251&target=Q35794&arrows=1');
 });
 
-it('looks for alternatives even when a route is already in the trail', async () => {
+it('finds alternatives to a route in the trail and reopens the chosen path', async () => {
   const college = a.nodes[1];
   const bridge = b.nodes[1];
   const directed = (edge: typeof a.edges[number], reversed = false) => ({
@@ -243,7 +243,7 @@ it('looks for alternatives even when a route is already in the trail', async () 
     ok: true, json: async () => String(url).includes('/route?') ? route : a,
   }) as Response);
   history.replaceState(null, '', `/?entity=Q7251&target=${college.id}`);
-  render(<App/>);
+  const explorer = render(<App/>);
   await screen.findByText('1 connection found in this trail.');
   fireEvent.click(screen.getByRole('button', { name: 'Look for more routes' }));
   const choices = await screen.findByRole('combobox', { name: 'Connection route' });
@@ -252,4 +252,23 @@ it('looks for alternatives even when a route is already in the trail', async () 
   expect(screen.getByText('Traversed against the statement arrow')).toBeTruthy();
   expect(within(screen.getByRole('list', { name: 'Connection path' })).getByRole('link', { name: bridge.label })).toBeTruthy();
   expect(fetch).toHaveBeenCalledWith(`/api/graph/route?start=Q7251&target=${college.id}&depth=deep`, expect.anything());
+  const query = `/?entity=Q7251&target=${college.id}&depth=deep&via=${bridge.id}`;
+  expect(location.search).toBe(query.slice(1));
+  fireEvent.click(screen.getByRole('button', { name: 'Save trail' }));
+  explorer.unmount();
+
+  history.replaceState(null, '', '/trails');
+  const saved = render(<App/>);
+  expect(screen.getByRole('link', { name: `Alan Turing → ${college.label}` }).getAttribute('href')).toBe(query);
+  saved.unmount();
+
+  history.replaceState(null, '', query);
+  render(<App/>);
+  const reopened = await screen.findByRole('combobox', { name: 'Connection route' }) as HTMLSelectElement;
+  expect(reopened.value).toBe('1');
+  expect(within(screen.getByRole('list', { name: 'Connection path' })).getByRole('link', { name: bridge.label })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Copy path and sources' }));
+  const copy = await screen.findByRole('textbox', { name: 'Copy this path and its sources' }) as HTMLTextAreaElement;
+  expect(copy.value).toContain('traversed against the statement arrow');
+  expect(copy.value).toContain(b.edges[0].source_url);
 });

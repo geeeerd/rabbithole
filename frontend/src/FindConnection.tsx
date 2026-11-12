@@ -45,32 +45,79 @@ function ConnectionPath({ path, start, savedIds }: { path: Path; start: Entity; 
   </ol>;
 }
 
-function ConnectionPaths({ result, start }: { result: Result; start: Entity }) {
-  const [active, setActive] = useState(0);
+function CopyConnectionPath({ path, start }: { path: Path; start: Entity }) {
+  const [status, setStatus] = useState<'ready' | 'copied' | 'manual'>('ready');
+  const labels = new Map(path.nodes.map(node => [node.id, node.label]));
+  const name = (id: string) => labels.get(id) ?? id;
+  const text = [
+    `${start.label} → ${name(path.steps.at(-1)!.to)}`,
+    ...path.steps.map(({ edge, reversed }, index) =>
+      `${index + 1}. ${name(edge.source)} → ${edge.label} → ${name(edge.target)}` +
+      `${reversed ? ' (traversed against the statement arrow)' : ''}\n   ${edge.source_url}`),
+  ].join('\n');
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus('copied');
+    } catch {
+      setStatus('manual');
+    }
+  }
+
+  return <div className="copy-connection-path">
+    <button type="button" onClick={() => void copy()}>Copy path and sources</button>
+    {status === 'copied' && <p role="status">Path and sources copied.</p>}
+    {status === 'manual' && <label>Copy this path and its sources
+      <textarea readOnly rows={5} value={text} onFocus={event => event.target.select()}/>
+    </label>}
+  </div>;
+}
+
+function ConnectionPaths({ result, start, via, lookupComplete, disabled, onChoose }: {
+  result: Result;
+  start: Entity;
+  via?: string[];
+  lookupComplete: boolean;
+  disabled: boolean;
+  onChoose: (via?: string[]) => void;
+}) {
   const paths = [result, ...(result.alternatives ?? [])];
-  const index = Math.min(active, paths.length - 1);
+  const waypoints = (path: Path) => path.steps.slice(0, -1).map(step => step.to);
+  const match = via ? paths.findIndex(path => waypoints(path).join(',') === via.join(',')) : 0;
+  const index = Math.max(0, match);
   const path = paths[index];
   const length = path.steps.length;
   return <>
     {paths.length > 1 && <label className="connection-route-choice">Connection route
-      <select value={index} onChange={event => setActive(Number(event.target.value))}>
-        {paths.map((option, position) => <option key={position} value={position}>
-          Route {position + 1} · {option.steps.length} {option.steps.length === 1 ? 'link' : 'links'}
-        </option>)}
+      <select value={index} disabled={disabled} onChange={event => {
+        const selected = Number(event.target.value);
+        onChoose(selected ? waypoints(paths[selected]) : undefined);
+      }}>
+        {paths.map((option, position) => {
+          const firstStop = option.steps.length > 1 && option.nodes.find(node => node.id === option.steps[0].to);
+          return <option key={position} value={position}>
+            Route {position + 1} · {option.steps.length} {option.steps.length === 1 ? 'link' : 'links'}
+            {firstStop && ` · via ${firstStop.label}`}
+          </option>;
+        })}
       </select>
     </label>}
+    {lookupComplete && match < 0 && <p role="status">The saved path isn’t in the current results. Showing the first route found.</p>}
     <p role="status">{length} {length === 1 ? 'connection' : 'connections'} found {result.checked === undefined ? 'in this trail' : 'in the checked neighborhood'}.</p>
     <ConnectionPath path={path} start={start} savedIds={result.savedIds}/>
+    <CopyConnectionPath key={path.steps.map(step => `${step.edge.id}:${step.to}`).join(',')} path={path} start={start}/>
   </>;
 }
 
-export function FindConnection({ graph, start, target, destination, arrowsOnly, deep, disabled, onTargetChange, onOptionsChange, onDestination }: {
+export function FindConnection({ graph, start, target, destination, arrowsOnly, deep, via, disabled, onTargetChange, onOptionsChange, onDestination }: {
   graph: Graph;
   start: Entity;
   target?: string;
   destination?: Entity;
   arrowsOnly: boolean;
   deep: boolean;
+  via?: string[];
   disabled: boolean;
   onTargetChange: (target?: string) => void;
   onOptionsChange: (options: ConnectionOptions) => void;
@@ -81,7 +128,7 @@ export function FindConnection({ graph, start, target, destination, arrowsOnly, 
   const [sameTopic, setSameTopic] = useState(false);
   const loaded = useMemo(() => target ? visibleRoute(graph, start.id, target, 'all', arrowsOnly, WIKIMEDIA_ADMIN_PROPERTIES) : null,
     [graph, start.id, target, arrowsOnly]);
-  const needsLookup = !!target && (deep || !loaded);
+  const needsLookup = !!target && (deep || !!via?.length || !loaded);
 
   useEffect(() => {
     if (!needsLookup || !target) return;
@@ -145,7 +192,8 @@ export function FindConnection({ graph, start, target, destination, arrowsOnly, 
       {needsLookup && !currentLookup && <p role="status">{deep ? 'Checking a wider set of Wikidata topics…' : 'Checking nearby Wikidata topics…'}</p>}
       {error && <div role="alert"><p>{error}</p><button onClick={() => setAttempt(count => count + 1)}>Retry connection search</button></div>}
       {result && <>
-        {result.steps.length > 0 ? <ConnectionPaths key={`${target}:${arrowsOnly}:${deep}:${result.checked ?? 'trail'}`} result={result} start={start}/>
+        {result.steps.length > 0 ? <ConnectionPaths result={result} start={start} via={via} lookupComplete={!!remote}
+          disabled={disabled} onChoose={waypoints => onOptionsChange({ via: waypoints })}/>
           : <p role="status">{arrowsOnly ? 'No route following the arrows was found in the checked neighborhood.'
             : 'No route found in the checked neighborhood.'}</p>}
         {remote && <p>Checked {remote.checked} topic records for routes of up to {remote.maxSteps ?? (deep ? 4 : 3)} connections.{remote.partial && ' Some live records were unavailable.'}</p>}
