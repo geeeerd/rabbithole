@@ -48,6 +48,8 @@ Pass `depth=deep` to search paths of up to four connections. The wider search ch
 
 Route search skips statements that organize Wikimedia categories, portals, templates and project focus lists.
 
+When the checked neighborhood yields more routes, `alternatives` contains up to two additional paths with distinct sequences of topics. Each path has its own `nodes` and `steps`. `saved_edge_ids` covers all returned paths.
+
 `GET /api/entities/Q7251/places` returns the topic’s recorded Earth coordinate when available and up to eight related places with usable coordinates. Each point includes precision, the coordinate statement, related place links and supported date qualifiers. `?offline=true` reads the saved coordinates and relationships without live requests.
 
 `GET /api/entities/Q7251/background` returns the introductory excerpt for the linked English Wikipedia article along with article, revision, contributor history and license URLs. A topic without a linked article or usable excerpt returns 404. An upstream outage returns 503.

@@ -129,7 +129,9 @@ def test_route_search_uses_bounded_bridge_records_and_preserves_arrows(monkeypat
     records = {'Q1': item('Q1', ['Q2']), 'Q2': item('Q2', ['Q3']),
                'Q3': item('Q3', []), 'Q4': item('Q4', ['Q3']), 'Q5': item('Q5', []),
                'Q6': item('Q6', ['Q7']), 'Q7': item('Q7', ['Q10']), 'Q10': item('Q10', ['Q8']),
-               'Q8': item('Q8', ['Q9']), 'Q9': item('Q9', ['Q8'])}
+               'Q8': item('Q8', ['Q9']), 'Q9': item('Q9', ['Q8']),
+               'Q20': item('Q20', ['Q24', 'Q21', 'Q22']), 'Q24': item('Q24', ['Q21', 'Q22']),
+               'Q21': item('Q21', []), 'Q22': item('Q22', [])}
     for key in ('Q6', 'Q9'):
         records[key]['claims']['P5008'] = item(key, ['Q99'])['claims']['P69']
     requests = []
@@ -163,3 +165,9 @@ def test_route_search_uses_bounded_bridge_records_and_preserves_arrows(monkeypat
     assert deep['max_steps'] == 4 and deep['checked'] == 5
     assert [step['to_id'] for step in deep['steps']] == ['Q7', 'Q10', 'Q8', 'Q9']
     assert all(not step['reversed'] for step in deep['steps'])
+    multiple = client.get('/api/graph/route', params={'start': 'Q20', 'target': 'Q24'}).json()
+    assert [step['to_id'] for step in multiple['steps']] == ['Q24']
+    assert [[step['to_id'] for step in path['steps']] for path in multiple['alternatives']] == [['Q21', 'Q24'], ['Q22', 'Q24']]
+    assert [[node['id'] for node in path['nodes']] for path in multiple['alternatives']] == [
+        ['Q20', 'Q21', 'Q24'], ['Q20', 'Q22', 'Q24'],
+    ]

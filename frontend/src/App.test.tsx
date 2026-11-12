@@ -225,3 +225,31 @@ it('runs a wider search from a quick miss and keeps the deeper setting in the li
   await screen.findByRole('button', { name: 'Search deeper' });
   expect(location.search).toBe('?entity=Q7251&target=Q35794&arrows=1');
 });
+
+it('looks for alternatives even when a route is already in the trail', async () => {
+  const college = a.nodes[1];
+  const bridge = b.nodes[1];
+  const directed = (edge: typeof a.edges[number], reversed = false) => ({
+    from_id: reversed ? edge.target : edge.source, to_id: reversed ? edge.source : edge.target, edge, reversed,
+  });
+  const route = {
+    nodes: a.nodes, checked: 12, saved_edge_ids: [], partial: false, max_steps: 4,
+    steps: a.edges.map(edge => directed(edge)),
+    alternatives: [{ nodes: [...a.nodes, bridge], steps: [
+      directed({ ...a.edges[0], id: 'via-cambridge', target: bridge.id }), directed(b.edges[0], true),
+    ] }],
+  };
+  vi.mocked(fetch).mockImplementation(async url => ({
+    ok: true, json: async () => String(url).includes('/route?') ? route : a,
+  }) as Response);
+  history.replaceState(null, '', `/?entity=Q7251&target=${college.id}`);
+  render(<App/>);
+  await screen.findByText('1 connection found in this trail.');
+  fireEvent.click(screen.getByRole('button', { name: 'Look for more routes' }));
+  const choices = await screen.findByRole('combobox', { name: 'Connection route' });
+  fireEvent.change(choices, { target: { value: '1' } });
+  expect(screen.getByText('2 connections found in the checked neighborhood.')).toBeTruthy();
+  expect(screen.getByText('Traversed against the statement arrow')).toBeTruthy();
+  expect(within(screen.getByRole('list', { name: 'Connection path' })).getByRole('link', { name: bridge.label })).toBeTruthy();
+  expect(fetch).toHaveBeenCalledWith(`/api/graph/route?start=Q7251&target=${college.id}&depth=deep`, expect.anything());
+});

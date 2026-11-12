@@ -33,6 +33,7 @@ ROUTE_MAX_STEPS = 3
 DEEP_ROUTE_CANDIDATES_PER_TOPIC = 16
 DEEP_ROUTE_MIDDLE_LIMIT = 12
 DEEP_ROUTE_MAX_STEPS = 4
+MAX_ROUTE_ALTERNATIVES = 2
 # These statements organize Wikimedia pages and projects rather than describing the topic.
 WIKIMEDIA_ADMIN_PROPERTIES = frozenset({"P301", "P910", "P1151", "P1424", "P5008", "P6104"})
 
@@ -66,9 +67,13 @@ class RouteStep(BaseModel):
     reversed: bool
 
 
-class TopicRoute(BaseModel):
+class RoutePath(BaseModel):
     nodes: list[Entity]
     steps: list[RouteStep]
+
+
+class TopicRoute(RoutePath):
+    alternatives: list[RoutePath]
     checked: int
     saved_edge_ids: list[str]
     partial: bool
@@ -76,9 +81,11 @@ class TopicRoute(BaseModel):
 
 
 def find_route(edges: list[Edge], start: str, target: str, *, arrows_only: bool = False,
-               max_steps: int = ROUTE_MAX_STEPS) -> list[RouteStep]:
+               max_steps: int = ROUTE_MAX_STEPS, blocked_hops: tuple[tuple[str, str], ...] = ()) -> list[RouteStep]:
     neighbors = defaultdict(list)
     for edge in edges:
+        if (edge.source, edge.target) in blocked_hops or (edge.target, edge.source) in blocked_hops:
+            continue
         neighbors[edge.source].append((edge.target, edge, False))
         if not arrows_only:
             neighbors[edge.target].append((edge.source, edge, True))
@@ -101,6 +108,25 @@ def find_route(edges: list[Edge], start: str, target: str, *, arrows_only: bool 
             previous[neighbor] = (current, edge, reversed_arrow)
             queue.append((neighbor, depth + 1))
     return []
+
+
+def route_alternatives(edges: list[Edge], primary: list[RouteStep], start: str, target: str, *,
+                       arrows_only: bool, max_steps: int) -> list[list[RouteStep]]:
+    # Any different sequence of topics leaves at least one hop of the primary route unused.
+    alternatives = {}
+
+    def try_different_hops(path, blocked=()):
+        for step in path:
+            excluded = (*blocked, (step.from_id, step.to_id))
+            route = find_route(edges, start, target, arrows_only=arrows_only, max_steps=max_steps, blocked_hops=excluded)
+            if route:
+                alternatives.setdefault(tuple(hop.to_id for hop in route), (route, excluded))
+
+    try_different_hops(primary)
+    if len(alternatives) == 1:
+        route, blocked = next(iter(alternatives.values()))
+        try_different_hops(route, blocked)
+    return sorted((route for route, _ in alternatives.values()), key=len)[:MAX_ROUTE_ALTERNATIVES]
 
 
 def route_candidates(edges: list[Edge], start: str, target: str, limit: int = ROUTE_CANDIDATES_PER_TOPIC) -> list[str]:

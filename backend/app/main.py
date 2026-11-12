@@ -12,7 +12,8 @@ from .connections import (
     DEEP_ROUTE_CANDIDATES_PER_TOPIC, DEEP_ROUTE_MAX_STEPS, DEEP_ROUTE_MIDDLE_LIMIT, ROUTE_MAX_STEPS,
     WIKIMEDIA_ADMIN_PROPERTIES,
     GRAPH_LABELS, ITEM_ID, LINK_EDGE_LIMIT, LINK_SOURCE_LIMIT, PAGE_SIZE, IncomingPage, LinkRequest, LinkScan,
-    TopicRoute, find_route, graph_statements, route_candidates, route_statements, saved_links, varied_order,
+    RoutePath, TopicRoute, find_route, graph_statements, route_alternatives, route_candidates, route_statements,
+    saved_links, varied_order,
 )
 from .facts import FACT_PAGE_SIZE, LABELS as FACT_LABELS, FactPage, recorded_facts
 from .geography import Place, Places, coordinate, place_links, relationship_dates, saved_places
@@ -300,6 +301,7 @@ async def graph_route(start: str, target: str, arrows_only: bool = False,
     if offline:
         saved.update(statements)
     neighborhood = varied_order(list({**saved, **statements}.values()))
+    expanded = neighborhood
     deep = depth == "deep"
     max_steps = DEEP_ROUTE_MAX_STEPS if deep else ROUTE_MAX_STEPS
     steps = find_route(neighborhood, start, target, arrows_only=arrows_only, max_steps=max_steps)
@@ -320,7 +322,7 @@ async def graph_route(start: str, target: str, arrows_only: bool = False,
             saved = {key: edge for key, edge in saved.items() if edge.source not in bridges}
         return bridge_edges
 
-    candidates = [] if steps else (
+    candidates = [] if steps and not deep else (
         route_candidates(neighborhood, start, target, DEEP_ROUTE_CANDIDATES_PER_TOPIC)
         if deep else route_candidates(neighborhood, start, target)
     )
@@ -342,21 +344,28 @@ async def graph_route(start: str, target: str, arrows_only: bool = False,
                 expanded = varied_order(list({**saved, **statements, **bridge_edges, **middle_edges}.values()))
                 steps = find_route(expanded, start, target, arrows_only=arrows_only, max_steps=max_steps)
 
-    ids = [start, *(step.to_id for step in steps)] if steps else [start, target]
+    alternatives = route_alternatives(expanded, steps, start, target, arrows_only=arrows_only, max_steps=max_steps)
+    paths = [steps, *alternatives]
+    route_steps = [step for path in paths for step in path]
+    ids = list(dict.fromkeys([start, target, *(step.to_id for step in route_steps)]))
     lookups = list(dict.fromkeys([
         *[key for key in ids if key not in records],
-        *[step.edge.property_id for step in steps if step.edge.property_id not in GRAPH_LABELS],
+        *[step.edge.property_id for step in route_steps if step.edge.property_id not in GRAPH_LABELS],
     ]))
     checked = len(records)
     if lookups:
         metadata, _ = await entities(lookups, include_claims=False)
         records.update({key: item for key, item in metadata.items() if "missing" not in item})
-    for step in steps:
+    for step in route_steps:
         prop = records.get(step.edge.property_id)
         if prop and prop.get("labels"):
             step.edge = step.edge.model_copy(update={"label": normalize(prop).label})
-    return TopicRoute(nodes=[normalize(records.get(key, {"id": key})) for key in ids], steps=steps,
-                      checked=checked, saved_edge_ids=[step.edge.id for step in steps if step.edge.id in saved],
+    nodes = {key: normalize(records.get(key, {"id": key})) for key in ids}
+    route_paths = [RoutePath(nodes=[nodes[start], *(nodes[step.to_id] for step in path)] if path
+                            else [nodes[start], nodes[target]], steps=path) for path in paths]
+    primary, *other_paths = route_paths
+    return TopicRoute(nodes=primary.nodes, steps=primary.steps, alternatives=other_paths, checked=checked,
+                      saved_edge_ids=list(dict.fromkeys(step.edge.id for step in route_steps if step.edge.id in saved)),
                       partial=partial, max_steps=max_steps)
 
 
