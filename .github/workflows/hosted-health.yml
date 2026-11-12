@@ -1,0 +1,22 @@
+name: Hosted health
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '19 */6 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    if: vars.RABBITHOLE_PUBLIC_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      PUBLIC_URL: ${{ vars.RABBITHOLE_PUBLIC_URL }}
+    steps:
+      - name: Check the public HTTPS release
+        run: |
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            --retry 4 --retry-connrefused --retry-delay 10 --max-time 24 "${PUBLIC_URL%/}/api/health" \
+            | python3 -c 'import json, sys; data = json.load(sys.stdin); sys.exit(0 if data.get("status") == "ok" else 1)'

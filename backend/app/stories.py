@@ -1,5 +1,6 @@
 """Reviewed narratives with transitions validated against bundled statement IDs."""
 import json
+from datetime import date, datetime, timezone
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -50,6 +51,14 @@ class Story(StorySummary):
     publication_status: str
 
 
+class DailyDiscovery(BaseModel):
+    day: date
+    story_id: str
+    source: Entity
+    target: Entity
+    edge: Edge
+
+
 def validate_story(raw):
     if len(raw["entities"]) < 2 or len(raw["transitions"]) != len(raw["entities"]) - 1:
         raise ValueError("A story needs a contiguous sequence of transitions")
@@ -73,6 +82,17 @@ STORIES = load_stories()
 @router.get("", response_model=list[StorySummary])
 def list_stories():
     return list(STORIES.values())
+
+
+@router.get("/daily-discovery", response_model=DailyDiscovery)
+def daily_discovery(day: date | None = None):
+    selected_day = day or datetime.now(timezone.utc).date()
+    stories = list(STORIES.values())
+    if not stories:
+        raise HTTPException(404, "No daily discovery is available.")
+    story = stories[selected_day.toordinal() % len(stories)]
+    return DailyDiscovery(day=selected_day, story_id=story.id, source=story.entities[0],
+                          target=story.entities[1], edge=story.transitions[0].edge)
 
 
 @router.get("/{story_id}", response_model=Story)

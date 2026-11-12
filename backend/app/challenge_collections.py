@@ -73,13 +73,20 @@ def load_rotation():
         if (not route or not 2 <= len(route) <= MAX_STEPS
                 or len(story_edges) > MAX_STEPS or not set(story_edges) <= graph.edges.keys()):
             raise ValueError(f"Puzzle must follow its reviewed route in two or more moves: {puzzle['id']}")
-    return collections, puzzles, date.fromisoformat(rotation["starts_on"])
+    by_id = {puzzle["id"]: puzzle for puzzle in puzzles}
+    eras = [(date.fromisoformat(era["starts_on"]), [by_id[key] for key in era["puzzles"]])
+            for era in rotation["eras"]]
+    dates = [start for start, _ in eras]
+    if not eras or dates != sorted(set(dates)) or any(not scheduled for _, scheduled in eras):
+        raise ValueError("The challenge rotation needs nonempty schedules in ascending date order")
+    return collections, puzzles, eras
 
 
-COLLECTIONS, PUZZLES, START_DATE = load_rotation()
+COLLECTIONS, PUZZLES, ERAS = load_rotation()
 COLLECTIONS_BY_VERSION = {collection.version: collection for collection in COLLECTIONS.values()}
 
 
 def puzzle_for(day: date) -> dict:
-    offset = max(0, (day - START_DATE).days)
-    return PUZZLES[offset % len(PUZZLES)]
+    start, scheduled = next((era for era in reversed(ERAS) if era[0] <= day), ERAS[0])
+    offset = max(0, (day - start).days)
+    return scheduled[offset % len(scheduled)]

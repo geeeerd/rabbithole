@@ -14,7 +14,7 @@ def test_published_stories_have_reproducible_paths_and_media_attribution(monkeyp
         raise AssertionError('Stories must load offline')
     monkeypatch.setattr(main,'request',no_network)
     stories = client.get('/api/stories').json()
-    assert len(stories) >= 3
+    assert 'mona-lisa-to-paris' in {story['id'] for story in stories}
     for summary in stories:
         assert 'intro' not in summary
         story = client.get('/api/stories/'+summary['id']).json()
@@ -36,3 +36,11 @@ def test_broken_story_sequences_cannot_be_published():
     with pytest.raises(ValueError,match='contiguous'):
         validate_story(story)
     assert client.get('/api/stories/unknown').status_code == 404
+
+
+def test_daily_discovery_uses_a_published_story_statement():
+    daily = client.get('/api/stories/daily-discovery?day=2026-11-12').json()
+    story = client.get('/api/stories/' + daily['story_id']).json()
+    assert daily['day'] == '2026-11-12'
+    assert daily['edge'] == story['transitions'][0]['edge']
+    assert [daily['source'], daily['target']] == story['entities'][:2]

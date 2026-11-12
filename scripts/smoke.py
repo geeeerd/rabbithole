@@ -43,7 +43,7 @@ def smoke(base: str, wait: int) -> None:
                 raise
             time.sleep(0.25)
 
-    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1", "/map?entity=Q7259&saved=1", "/trails"):
+    for route in ("/", "/stories?story=curie-and-paris&step=2", "/challenge", "/timeline?entity=Q7251&saved=1", "/map?entity=Q7259&saved=1", "/map/boundaries?year=2023", "/trails"):
         with get(route) as response:
             page = response.read().decode()
             assert "RabbitHole" in page
@@ -70,8 +70,15 @@ def smoke(base: str, wait: int) -> None:
         assert response.headers.get_content_type() == "image/svg+xml"
         assert b"Natural Earth" in response.read()
 
+    with get("/maps/connecticut-boundaries.json") as response:
+        boundaries = json.load(response)
+    assert [(entry["year"], len(entry["regions"])) for entry in boundaries["snapshots"]] == [("2020", 8), ("2023", 9)]
+    assert boundaries["license_url"] and boundaries["uncertainty"]
+
     stories = api("/api/stories")
-    assert len(stories) >= 3
+    assert "mona-lisa-to-paris" in {card["id"] for card in stories}
+    daily = api("/api/stories/daily-discovery")
+    assert daily["story_id"] in {card["id"] for card in stories} and daily["edge"]["source_url"]
     for card in stories:
         story = api("/api/stories/" + card["id"])
         assert len(story["entities"]) == len(story["transitions"]) + 1

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: rabbithole
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: CHALLENGE_SIGNING_KEY
+        generateValue: true
+      - key: WIKIMEDIA_USER_AGENT
+        sync: false

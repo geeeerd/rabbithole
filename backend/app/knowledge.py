@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 SEEDS = Path(__file__).resolve().parents[2] / "data" / "seeds"
 PROPERTIES = {"P69": "educated at", "P101": "field of work", "P108": "employer", "P19": "place of birth", "P20": "place of death", "P27": "country of citizenship", "P106": "occupation", "P800": "notable work", "P737": "influenced by", "P361": "part of", "P279": "subclass of", "P50": "author", "P112": "founded by", "P159": "headquarters location", "P17": "country"}
+PROPERTIES.update({"P276": "location", "P36": "capital"})
 
 class Entity(BaseModel):
     id: str

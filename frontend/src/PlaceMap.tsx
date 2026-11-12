@@ -85,6 +85,7 @@ export function PlaceMap() {
       <div className="eyebrow">TIMEATLAS · MAP</div>
       <h1>See where the story happened.</h1>
       <p>Find mapped places connected to a topic, including birthplaces, institutions and locations named in Wikidata.</p>
+      <a className="source" href="/map/boundaries">Compare historical boundaries ↗</a>
     </div>
     <SearchBox label="Search for a map topic" placeholder="Find a topic on the map…" onSelect={entity => open({ ...selection, entity })}/>
     <div className="suggestions">TRY A MAP {examples.map(([id, label]) => <button key={id} onClick={() => open({ ...selection, entity: id })}>{label} ↗</button>)}</div>

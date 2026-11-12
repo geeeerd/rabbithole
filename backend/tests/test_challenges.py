@@ -68,6 +68,7 @@ def test_daily_rotation_replays_each_reviewed_puzzle_by_date():
         ('2026-11-10', 'classic', 'Q7251', 'Q35794', 2),
         ('2026-11-11', 'computing', 'Q7259', 'Q35794', 3),
         ('2026-11-12', 'science', 'Q7186', 'Q90', 2),
+        ('2026-11-13', 'art', 'Q12418', 'Q90', 2),
     ]
     for day, category, start, destination, steps in expected:
         path = '/api/challenges/daily?day=' + day
@@ -87,7 +88,7 @@ def test_new_collections_preserve_classic_progress_and_constrain_practice_pairs(
     assert classic['graph_version'] == '4a16ef7d7cf6a542'
     assert post('verify-path', classic).status_code == 200
     science = client.get('/api/challenges/collection?category=science').json()
-    assert {item['id'] for item in science['categories']} == {'classic', 'computing', 'science'}
+    assert {item['id'] for item in science['categories']} == {'classic', 'computing', 'science', 'art'}
     assert science['default_start'] == 'Q7186'
     assert client.post('/api/challenges/custom', json={'category':'science','start':'Q7251','destination':'Q90'}).status_code == 422
     game = client.post('/api/challenges/custom', json={'category':'science','start':'Q7186','destination':'Q90'}).json()

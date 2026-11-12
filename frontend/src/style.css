@@ -75,6 +75,15 @@
 .copy-connection-path button{font-size:12px}
 .find-connection .copy-connection-path label{display:grid;gap:6px;margin-top:8px}
 .copy-connection-path textarea{width:100%;resize:vertical;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
+.daily-discovery div a{color:var(--accent);font-size:13px}
+.boundary-year{display:grid;gap:6px;max-width:400px;margin:16px 0;font-size:14px;color:var(--muted)}
+.boundary-year select{width:100%;min-width:0;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:10px}
+.boundary-map{border:1px solid var(--line);border-radius:12px;background:#12242a;overflow:hidden}
+.boundary-map svg{display:block;width:100%;max-height:480px;aspect-ratio:1.8}
+.boundary-map path{fill:#7ca694;stroke:#173e37;stroke-width:1.7;vector-effect:non-scaling-stroke;cursor:pointer}
+.boundary-map path:hover,.boundary-map path.selected{fill:#cff6a7;stroke:#1b5c3f;stroke-width:2.2}
+.boundary-source{margin-top:20px}
+.boundary-source a{display:inline-block;margin:4px 18px 4px 0}
 .connection-result-actions a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 .find-connection .connection-path{list-style:none;padding:0;margin:12px 0}
 .connection-path-topic{display:inline-flex;max-width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-weight:700;overflow-wrap:anywhere}

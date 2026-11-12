@@ -32,6 +32,8 @@ Tokens expire after 24 hours. `CHALLENGE_SIGNING_KEY` can be provided through th
 
 `GET /api/stories` returns published summaries with category, topic count, image attribution and review timestamp. `GET /api/stories/{id}` returns an ordered entity sequence, editorial text, transitions with exact source statements, additional source links and full media metadata. Unknown IDs return 404. Startup validation rejects missing or reversed transitions. These endpoints use bundled data and do not need external API access.
 
+`GET /api/stories/daily-discovery` returns the first sourced connection from a published story selected for the current UTC day. Pass `?day=YYYY-MM-DD` to select a day from the current catalog.
+
 ## Connection pages and timelines
 
 `GET /api/graph?entity=Q7251&offset=0` and the entity neighbors endpoint return up to 24 root statements per page, plus saved cross-links among visible topics. Pass the returned `next_offset` to load another page. A null offset indicates the end of the available pages. `total_statements` counts root statements before metadata resolution. `saved_edge_ids` marks statements obtained from bundled records. Source and target IDs always follow the original direction.

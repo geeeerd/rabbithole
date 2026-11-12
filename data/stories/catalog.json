@@ -130,5 +130,59 @@
       "modification": "Displayed with a CSS crop; original downloaded file retained.",
       "retrieved_at": "2026-11-06T08:44:04.612452+00:00"
     }
+  },
+  {
+    "id": "mona-lisa-to-paris",
+    "title": "From the Mona Lisa to Paris",
+    "description": "Start with a painting and follow the records through its museum, country and capital.",
+    "category": "Art and Culture",
+    "intro": "A painting, the museum that displays it, and the country and city around it are separate topics in Wikidata. Follow the relationship on each record to see how they fit together.",
+    "entities": [
+      "Q12418",
+      "Q19675",
+      "Q142",
+      "Q90"
+    ],
+    "transitions": [
+      {
+        "id": "Q12418$e1246307-4255-c803-42d7-8dc60bfddb83",
+        "heading": "Start in the gallery",
+        "text": "Wikidata records the Louvre Museum as the painting’s location. The Louvre’s own collection record identifies it as the portrait of Lisa Gherardini and places it in the Salle des États."
+      },
+      {
+        "id": "Q19675$bf3e072f-4f03-67fe-8029-ef675d600ef2",
+        "heading": "Follow the museum’s country",
+        "text": "The museum’s country statement points to France. This step locates the institution at the country level."
+      },
+      {
+        "id": "q142$BBD442C6-E5D6-465D-ABD6-A23C8B08035D",
+        "heading": "Return to the city",
+        "text": "France’s capital statement points to Paris. The Louvre’s visitor information also gives its address in Paris, so the final topic brings the route back to the city where the painting is displayed."
+      }
+    ],
+    "summary": "Location, country and capital describe three different relationships. Explore Paris or the Louvre to see what other collections and places the records connect.",
+    "sources": [
+      {
+        "title": "Louvre collection record for the Mona Lisa",
+        "url": "https://collections.louvre.fr/ark:/53355/cl010062370"
+      },
+      {
+        "title": "Louvre visitor information",
+        "url": "https://www.louvre.fr/en/visit"
+      }
+    ],
+    "publication_status": "published",
+    "reviewed_at": "2026-11-12T18:27:14.318095+00:00",
+    "image": {
+      "file_title": "File:Mona Lisa, by Leonardo da Vinci, from C2RMF retouched.jpg",
+      "url": "/images/Q12418.jpg",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/960px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg",
+      "artist": "Leonardo da Vinci. Digital reproduction from C2RMF, retouched by Wikimedia Commons contributors.",
+      "license": "Public Domain Mark 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "modification": "Resized and JPEG-compressed for RabbitHole. The interface may crop the image for display.",
+      "retrieved_at": "2026-11-12T18:27:14.318095+00:00"
+    }
   }
 ]

@@ -26,6 +26,10 @@ Run the same smoke test from the repository root. Development remains available 
 
 ## Host behind HTTPS
 
+`render.yaml` defines a Docker web service on Render’s free preview tier. Import the repository as a Blueprint and supply a `WIKIMEDIA_USER_AGENT` value with the project URL and an operator contact. Render generates the challenge signing key. The preview tier can sleep after inactivity. Use the assigned HTTPS address for the first smoke check. [Blueprint reference](https://render.com/docs/blueprint-spec) · [Free tier behavior](https://render.com/docs/free)
+
+After deployment, run `python3 scripts/smoke.py --base "$RABBITHOLE_PUBLIC_URL" --wait 90` from the repository root. Confirm that separate browsers can search and expand topics behind the platform’s proxy. Set the GitHub repository variable `RABBITHOLE_PUBLIC_URL` to the HTTPS base address and run **Hosted health** from Actions. That workflow checks `/api/health` every six hours when the URL is configured. Use the platform or repository notification settings to route failures to the operator.
+
 Use one worker initially. The cache, request counters, and upstream cooldown live in that worker and reset on restart. Set `CHALLENGE_SIGNING_KEY` to a persistent secret and configure `WIKIMEDIA_USER_AGENT` with a project URL and contact for the operator. Use `/api/health` for platform checks. The container listens on `PORT` when supplied.
 
 If the service receives traffic through a reverse proxy, configure `FORWARDED_ALLOW_IPS` to the trusted proxy address or network and have that proxy replace client-supplied forwarding headers. Without trusted proxy configuration the rate limiter sees the connecting peer. The default trust list is loopback only.

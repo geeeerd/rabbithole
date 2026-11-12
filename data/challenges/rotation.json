@@ -1,5 +1,14 @@
 {
-  "starts_on": "2026-11-10",
+  "eras": [
+    {
+      "starts_on": "2026-11-10",
+      "puzzles": ["turing-to-cambridge-v1", "ada-to-cambridge-v1", "curie-to-paris-v1"]
+    },
+    {
+      "starts_on": "2026-11-13",
+      "puzzles": ["mona-lisa-to-paris-v1", "turing-to-cambridge-v1", "ada-to-cambridge-v1", "curie-to-paris-v1"]
+    }
+  ],
   "collections": [
     {
       "id": "computing",
@@ -7,6 +16,13 @@
       "entities": ["Q7259", "Q46633", "Q332342", "Q35794", "Q395", "Q21198"],
       "properties": ["P737", "P69", "P361", "P101"],
       "snapshot_date": "2026-11-06"
+    },
+    {
+      "id": "art",
+      "label": "Art and museums",
+      "entities": ["Q12418", "Q19675", "Q142", "Q90"],
+      "properties": ["P276", "P17", "P36"],
+      "snapshot_date": "2026-11-12"
     },
     {
       "id": "science",
@@ -37,6 +53,13 @@
       "start": "Q7186",
       "destination": "Q90",
       "story": "curie-and-paris"
+    },
+    {
+      "id": "mona-lisa-to-paris-v1",
+      "collection": "art",
+      "start": "Q12418",
+      "destination": "Q90",
+      "story": "mona-lisa-to-paris"
     }
   ]
 }

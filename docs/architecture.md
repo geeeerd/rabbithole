@@ -16,7 +16,7 @@ Search requests are cancelled when the query changes. Exploration responses use 
 
 ## Connection Challenge
 
-Each challenge collection builds a deterministic, versioned directed graph from bundled Wikidata records. A manifest defines its eligible topics and relationship types. Breadth-first search verifies that a daily puzzle takes at least two moves and computes hints within that collection. Startup checks the reviewed story endpoints and statement IDs against the graph. The dated rotation repeats three puzzles on UTC days. Its schedule and collections are in `data/challenges/rotation.json`. The classic graph keeps its existing version so active progress can still verify with the same signing key.
+Each challenge collection builds a deterministic, versioned directed graph from bundled Wikidata records. A manifest defines its eligible topics and relationship types. Breadth-first search verifies that a daily puzzle takes at least two moves and computes hints within that collection. Startup checks the reviewed story endpoints and statement IDs against the graph. Dated UTC schedules in `data/challenges/rotation.json` preserve replay dates when new puzzles join the rotation. The classic graph retains its original version so existing progress can still verify with the same signing key.
 
 Progress is a signed, expiring token containing the fixed graph version, endpoints, actual statement IDs, hint count and expiry. Each action checks the signature, graph version, expiry and path continuity. Completion is derived server-side. HMAC keys come from `CHALLENGE_SIGNING_KEY` or a random process key. Local browser session storage retains only the token, which is revalidated on mount. Tokens can be replayed, and claims are not ranked against other users.
 

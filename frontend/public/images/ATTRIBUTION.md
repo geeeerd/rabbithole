@@ -1,6 +1,6 @@
 # Portrait attribution
 
-All three files were recorded as public domain by Wikimedia Commons at retrieval. See each file page for jurisdictional details. The downloaded files are unchanged; the interface may display a CSS crop.
+Wikimedia Commons recorded these files as public domain at retrieval. See each file page for jurisdictional details and the notes below for local modifications.
 
 ## File:Alan Turing (1951) (crop).jpg
 - Local file: Q7251.jpg
@@ -22,3 +22,12 @@ All three files were recorded as public domain by Wikimedia Commons at retrieval
 - License: [Public domain](https://commons.wikimedia.org/wiki/Commons:Public_domain)
 - Source: [File:Marie Curie (1900) (cropped).jpg](https://commons.wikimedia.org/wiki/File:Marie_Curie_(1900)_(cropped).jpg)
 - Retrieved: 2026-11-06T08:44:04.612452+00:00
+
+## File:Mona Lisa, by Leonardo da Vinci, from C2RMF retouched.jpg
+
+- Local file: Q12418.jpg
+- Creator: Leonardo da Vinci. Digital reproduction from C2RMF, retouched by Wikimedia Commons contributors.
+- License: [Public Domain Mark 1.0](https://creativecommons.org/publicdomain/mark/1.0/)
+- Source: [Commons file and credits](https://commons.wikimedia.org/wiki/File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg)
+- Retrieved: 2026-11-12T18:27:14.318095+00:00
+- Local modifications: Resized and JPEG-compressed for display.

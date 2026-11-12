@@ -4,4 +4,10 @@ Run the setup and checks in README.md. Keep changes focused and describe validat
 
 For a source correction, include the topic ID, original statement ID or source URL, and supporting references. Keep a statement's recorded direction, date precision and calendar when presenting it. Record missing evidence where it matters to the interpretation.
 
+## Discovery Stories
+
+1. Open a Discovery Story proposal with the ordered Wikidata IDs, each directed statement, supporting sources and cover license.
+2. Prepare the editorial copy and attribution in a draft pull request. Bundle the required original statement records with their revisions. Ask a second reviewer to check the route, sources, media terms and claims.
+3. After review, record the review date and mark the catalog entry `published`. Run the story tests and release smoke check. For a daily puzzle, validate the same path in its collection and add a dated rotation entry so previous dates still replay.
+
 The release build includes browser dependency notices copied from the installed packages. When the frontend lockfile changes, run `node scripts/collect-web-licenses.mjs --refresh` after `npm ci`. The release verifies the notices against the installed packages. Record licenses and sources for data and media separately from the software license.

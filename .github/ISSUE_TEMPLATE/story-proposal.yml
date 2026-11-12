@@ -1,0 +1,22 @@
+name: Discovery Story proposal
+description: Propose a sourced journey through connected topics.
+body:
+  - type: textarea
+    id: route
+    attributes:
+      label: Ordered topics and statements
+      description: List the Wikidata topic IDs and the original statement ID or link for each transition.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Supporting sources
+      description: Link primary or institutional sources, and explain any disputed or uncertain claims.
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: Optional cover image
+      description: Provide the original file page, author and license.
